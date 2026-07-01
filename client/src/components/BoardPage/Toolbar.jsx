@@ -9,6 +9,7 @@ import {
   Pencil,
   ChevronLeft,
   BrushCleaning,
+  Eraser,
 } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
 import "./Toolbar.css";
@@ -38,7 +39,9 @@ export default function Toolbar({
   setPendingShapeType,
   pendingShapeType,
   stageRef,
-  stageSize,connectingFrom
+  stageSize,
+  connectingFrom,
+  setSelectedId,
 }) {
   const navigate = useNavigate();
   const theme = useSelector((state) => state.theme.mode);
@@ -82,13 +85,13 @@ export default function Toolbar({
               <div className="tooltip tooltip-bottom" data-tip={config.datatip}>
                 <button
                   key={type}
-                  onClick={() =>{
-                    
-                     setTool( "select")
-                    setPendingShapeType(type)}
-                     }
+                  onClick={() => {
+                    setSelectedId(null);
+                    setTool("select");
+                    setPendingShapeType(type);
+                  }}
                   className={
-                    pendingShapeType === type
+                    pendingShapeType === type 
                       ? "bg-primary p-2! rounded-md text-primary-content"
                       : " p-2!"
                   }
@@ -98,12 +101,15 @@ export default function Toolbar({
               </div>
             </li>
           ))}
+
         <li>
           <div className="tooltip" data-tip="Pencil">
             <button
-              onClick={() =>
-                setTool(tool === "freehand" ? "select" : "freehand")
-              }
+              onClick={() => {
+                setSelectedId(null);
+                setPendingShapeType(null);
+                setTool(tool === "freehand" ? "select" : "freehand");
+              }}
               className={
                 tool === "freehand"
                   ? "bg-primary p-2! rounded-md text-primary-content"
@@ -115,12 +121,36 @@ export default function Toolbar({
           </div>
         </li>
         <li>
+          <div className="tooltip" data-tip="Eraser">
+            <button
+              onClick={() => {
+                setSelectedId(null);
+                setPendingShapeType(null);
+                setTool(tool === "eraser" ? "select" : "eraser");
+              }}
+              className={
+                tool === "eraser"
+                  ? "bg-primary p-2! rounded-md text-primary-content"
+                  : "p-2!"
+              }
+            >
+              <Eraser size={18} />
+            </button>
+          </div>
+        </li>
+        <li>
           <div className="tooltip" data-tip="Connect">
             <button
-              onClick={() => setTool(tool === "connect" ? "select" : "connect")}
+              onClick={() => {
+                setSelectedId(null);
+                setPendingShapeType(null);
+                setTool(tool === "connect" ? "select" : "connect");
+              }}
               className={
                 tool === "connect"
-                  ? connectingFrom ? "bg-primary/40 p-2! rounded-md text-primary-content":"bg-primary p-2! rounded-md text-primary-content"
+                  ? connectingFrom
+                    ? "bg-primary/40 p-2! rounded-md text-primary-content"
+                    : "bg-primary p-2! rounded-md text-primary-content"
                   : "p-2!"
               }
             >
@@ -221,8 +251,3 @@ export default function Toolbar({
     </div>
   );
 }
-
-
-
-
-                

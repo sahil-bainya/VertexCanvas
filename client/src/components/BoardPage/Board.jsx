@@ -11,6 +11,7 @@ import StageCanvas from "./StageCanvas.jsx";
 import CanvasControls from "./CanvasControls.jsx";
 import SelectionControls from "./SelectionControls..jsx";
 import { notify } from "../../utils/toast.jsx";
+import { Maximize, Minimize } from "lucide-react";
 
 export default function Board() {
   const {
@@ -62,7 +63,12 @@ export default function Board() {
     startFreehandDraw,
     continueFreehandDraw,
     endFreehandDraw,
+    pencilColor,
+    setPencilColor,
+    pencilStrokeWidth,
+    setPencilStrokeWidth,fullScreen, setFullScreen
   } = useBoard();
+
 
   const [loading, setLoading] = useState(false); // for cleanup
   const [pendingCleanup, setPendingCleanup] = useState(false);
@@ -127,6 +133,10 @@ export default function Board() {
   };
 
   const handleShapeClick = (e, id) => {
+    if (tool === "eraser") {
+      deleteSelected(id, removeArrowsForShape);
+      return;
+    }
     if (tool === "connect") {
       if (!connectingFrom) {
         setConnectingFrom(id);
@@ -179,7 +189,7 @@ export default function Board() {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
       {/* TOP BAR — canvas ke upar, apni height occupy kare */}
-      <div ref={toolbarRef} className="shrink-0 z-50">
+      {!fullScreen && <div ref={toolbarRef} className="shrink-0 z-50">
         <Toolbar
           loading={loading}
           handleAssist={handleAssist}
@@ -216,14 +226,24 @@ export default function Board() {
           stageRef={stageRef}
           stageSize={stageSize}
           connectingFrom={connectingFrom}
+          setSelectedId={setSelectedId}
         />
-      </div>
+      </div>}
+      
 
       {/* CANVAS AREA — baaki poori height */}
       <div className="relative flex-1 overflow-hidden">
         {/* Konva Canvas */}
         <div
-          className={pendingShapeType ? "cursor-crosshair" : "cursor-default"}
+          className={
+            pendingShapeType
+              ? "cursor-crosshair"
+              : tool === "freehand"
+                ? "cursor-pencil"
+                : tool === "eraser"
+                  ? ""
+                  : "cursor-default"
+          }
         >
           <StageCanvas
             stageRef={stageRef}
@@ -253,7 +273,7 @@ export default function Board() {
         </div>
 
         {/* AI Suggestion Panel — mid left, canvas ke andar */}
-        {aiPanelOpen && (
+        {!fullScreen && aiPanelOpen && (
           <AisuggestionPannel
             suggestions={aiResponse?.suggestions}
             summary={aiResponse?.summary}
@@ -275,7 +295,7 @@ export default function Board() {
         )}
 
         {/* ContextPanel — bottom center, SelectionControls ke upar */}
-        {contextShape && (
+        {!fullScreen && contextShape && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 w-[35vw] max-w-xl max-h-[60vh]">
             {" "}
             {/* ← max-h-[60vh] add-kiya */}
@@ -295,7 +315,7 @@ export default function Board() {
         )}
 
         {/* SelectionControls — bottom center */}
-        {selectedId && (
+        {!fullScreen && (selectedId || tool === "freehand") && (
           <div
             className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 ${
               contextShape ? "opacity-40 pointer-events-none" : "opacity-100"
@@ -304,11 +324,11 @@ export default function Board() {
             <SelectionControls
               shapes={shapes}
               selectedId={selectedId}
-              tool={tool}  
-      // pencilColor={pencilColor}
-      // setPencilColor={setPencilColor}
-      // pencilStrokeWidth={pencilStrokeWidth}
-      // setPencilStrokeWidth={setPencilStrokeWidth}
+              tool={tool}
+              pencilColor={pencilColor}
+              setPencilColor={setPencilColor}
+              pencilStrokeWidth={pencilStrokeWidth}
+              setPencilStrokeWidth={setPencilStrokeWidth}
               setShapes={setShapes}
               saveHistory={saveHistory}
               setContextShape={setContextShape}
@@ -317,21 +337,29 @@ export default function Board() {
         )}
 
         {/* CanvasControls — bottom left */}
-        <div className="absolute bottom-4 left-4 z-40">
-          <CanvasControls
-            undo={undo}
-            redo={redo}
-            zoomIn={zoomIn}
-            zoomOut={zoomOut}
-            resetZoom={resetZoom}
-            grid={grid}
-            setGrid={setGrid}
-          />
+        {!fullScreen && (
+          <div className="absolute bottom-4 left-4 z-40">
+            <CanvasControls
+              undo={undo}
+              redo={redo}
+              zoomIn={zoomIn}
+              zoomOut={zoomOut}
+              resetZoom={resetZoom}
+              grid={grid}
+              setGrid={setGrid}
+            />
+          </div>
+        )}
+
+        <div className="absolute bottom-6 right-7 z-49  rounded-md px-1.5! pt-1.5! bg-base-300">
+          <button onClick={() => setFullScreen((prev) => !prev)}>
+            {fullScreen ? <Minimize /> : <Maximize />}
+          </button>
         </div>
       </div>
 
       {/* Notes Page — right side slide-in */}
-      {notesShowing && (
+      { notesShowing && (
         <div className="absolute right-0 top-0 h-full z-50 shadow-xl border-l border-base-300 w-[clamp(260px,25vw,380px)] overflow-hidden">
           <NotesPage
             boardNotes={boardNotes}

@@ -2,6 +2,7 @@ import { Stage, Layer, Transformer, Arrow, Text } from "react-konva";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getTextPosition } from "./canvasHelper.js";
 import "./BoardStyle.css";
+
 export default function StageCanvas({
   stageRef,
   stageSize,
@@ -12,8 +13,6 @@ export default function StageCanvas({
   updateArrowPoints,
   handleDragEnd,
   handleTransformEnd,
-  handleTextDblClick,
-  setContextShape,
   transformerRef,
   selectedId,
   handleShapeClick,
@@ -29,61 +28,69 @@ export default function StageCanvas({
 }) {
   return (
     <Stage
-  id={grid ? "Canvas" : undefined}
-  width={stageSize.width}
-  height={stageSize.height}
-  ref={stageRef}
-  draggable={!pendingShapeType && tool !== "freehand"}  
-      onWheel={(e) => {  // ← yeh add karo, ZOOM ke liye
-     e.evt.preventDefault();
-  const stage = stageRef.current;
-  
-  // Zoom hatao, sirf scroll karo
-  const dx = e.evt.deltaX;
-  const dy = e.evt.deltaY;
-  
-  stage.position({
-    x: stage.x() - dx,
-    y: stage.y() - dy,
-  });
-  }}
-  onMouseDown={(e) => {
-    if (pendingShapeType) {
-      const pointerPos = e.target.getStage().getPointerPosition();
-      const stage = e.target.getStage();
-      const transform = stage.getAbsoluteTransform().copy().invert();
-      const canvasPos = transform.point(pointerPos);
-      addShape(pendingShapeType, canvasPos.x, canvasPos.y);
-      setPendingShapeType(null);
-      return;
-    }
+      id={grid ? "Canvas" : undefined}
+      width={stageSize.width}
+      height={stageSize.height}
+      ref={stageRef}
+      draggable={!pendingShapeType && tool !== "freehand" && tool !== "eraser"}
+      onWheel={(e) => {
+        // ← yeh add karo, ZOOM ke liye
+        e.evt.preventDefault();
+        const stage = stageRef.current;
 
-    if (tool === "freehand") {
-      const stage = e.target.getStage();
-      const pointerPos = stage.getPointerPosition();
-      const transform = stage.getAbsoluteTransform().copy().invert();
-      const canvasPos = transform.point(pointerPos);
-      startFreehandDraw(canvasPos.x, canvasPos.y);
-      return;
-    }
+        // Zoom hatao, sirf scroll karo
+        const dx = e.evt.deltaX;
+        const dy = e.evt.deltaY;
 
-    if (e.target === e.target.getStage()) setSelectedId(null);
+        stage.position({
+          x: stage.x() - dx,
+          y: stage.y() - dy,
+        });
+      }}
+      onMouseDown={(e) => {
+        if (pendingShapeType) {
+          const pointerPos = e.target.getStage().getPointerPosition();
+          const stage = e.target.getStage();
+          const transform = stage.getAbsoluteTransform().copy().invert();
+          const canvasPos = transform.point(pointerPos);
+          addShape(pendingShapeType, canvasPos.x, canvasPos.y);
+          setPendingShapeType(null);
+          return;
+        }
+
+        if (tool === "freehand") {
+          const stage = e.target.getStage();
+          const pointerPos = stage.getPointerPosition();
+          const transform = stage.getAbsoluteTransform().copy().invert();
+          const canvasPos = transform.point(pointerPos);
+          startFreehandDraw(canvasPos.x, canvasPos.y);
+          return;
+        }
+
+        if (e.target === e.target.getStage()) setSelectedId(null);
+      }}
+      onMouseMove={(e) => {
+        if (tool === "freehand" && isDrawing) {
+          const stage = e.target.getStage();
+          const pointerPos = stage.getPointerPosition();
+          const transform = stage.getAbsoluteTransform().copy().invert();
+          const canvasPos = transform.point(pointerPos);
+          continueFreehandDraw(canvasPos.x, canvasPos.y);
+        }
+      }}
+      onMouseUp={() => {
+        if (tool === "freehand" && isDrawing) {
+          endFreehandDraw();
+        }
+      }}
+      onMouseEnter={() => {
+    const container = stageRef.current.container();
+    if (tool === "freehand") container.style.cursor = "crosshair";
+    else if (tool === "eraser") container.style.cursor = "grab";
+    else if (pendingShapeType) container.style.cursor = "crosshair";
+    else container.style.cursor = "default";
   }}
-  onMouseMove={(e) => {
-    if (tool === "freehand" && isDrawing) {
-      const stage = e.target.getStage();
-      const pointerPos = stage.getPointerPosition();
-      const transform = stage.getAbsoluteTransform().copy().invert();
-      const canvasPos = transform.point(pointerPos);
-      continueFreehandDraw(canvasPos.x, canvasPos.y);
-    }
-  }}
-  onMouseUp={() => {
-    if (tool === "freehand" && isDrawing) {
-      endFreehandDraw();
-    }
-  }}
->
+    >
       <Layer>
         {arrows.map((arrow) => (
           <Arrow
@@ -96,32 +103,31 @@ export default function StageCanvas({
         ))}
         {shapes.map((el) => {
           const { Component, getProps } = SHAPE_CONFIG[el.type];
-           const isFreehand = el.type === "freehand";  // ← yeh-add-karo
-          if (el.type === "diamond") {
-            console.log("Diamond props:", getProps(el));
-            console.log("Diamond el:", el);
-          }
+          const isFreehand = el.type === "freehand"; // ← yeh-add-karo
+
           return (
             <>
               <Component
                 key={el.id}
-                draggable={!isFreehand} 
+                draggable={!isFreehand}
                 x={el.x || 0}
                 y={el.y || 0}
                 rotation={el.rotation || 0}
                 fill={el.fill}
                 stroke={el.stroke}
+                 hitStrokeWidth={isFreehand ? 20 : undefined}
                 ref={(node) => (shapeRefs.current[el.id] = node)}
-                onClick={isFreehand ? undefined : (e) => handleShapeClick(e, el.id)}
+                onClick={
+                  isFreehand
+                    ? tool === "eraser"
+                      ? (e) => handleShapeClick(e, el.id)
+                      : undefined
+                    : (e) => handleShapeClick(e, el.id)
+                }
                 onDragMove={() => updateArrowPoints(el.id)}
                 onDragEnd={(e) => handleDragEnd(e, el.id, updateArrowPoints)}
                 onTransformEnd={() => handleTransformEnd(el.id)}
-                onDblClick={() =>
-                  el.type === "text"
-                    ? handleTextDblClick(el.id)
-                    : setContextShape(el)
-                }
-                listening={!isFreehand} 
+                listening={isFreehand ? tool === "eraser" : true}
                 {...getProps(el)}
               />
 

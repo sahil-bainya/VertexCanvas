@@ -19,9 +19,64 @@ export default function SelectionControls({
   selectedId,
   setShapes,
   saveHistory,
-  setContextShape,tool
+  setContextShape,
+  tool,
+  pencilColor,
+  setPencilColor,
+  pencilStrokeWidth,
+  setPencilStrokeWidth,
 }) {
   const selectedShape = shapes.find((s) => s.id === selectedId);
+  if (tool === "freehand" && !selectedShape) {
+    return (
+      <div className="flex items-center gap-3 bg-base-100 border border-primary/40 rounded-md p-2!">
+        <label
+          htmlFor="pencil-color-picker"
+          className="flex items-center gap-1 cursor-pointer"
+        >
+          <div
+            className="w-6 h-6 rounded-full overflow-hidden border border-base-300"
+            style={{ backgroundColor: pencilColor }}
+          >
+            <input
+              id="pencil-color-picker"
+              type="color"
+              value={pencilColor}
+              onChange={(e) => setPencilColor(e.target.value)}
+              className="opacity-0 w-0 h-0"
+            />
+          </div>
+          <FaCaretDown size={10} className="text-base-content/40" />
+        </label>
+        
+        <div className="flex items-center gap-1">
+  {[
+  { value: 2, size: "w-2 h-2" },
+  { value: 5, size: "w-3.5 h-3.5" },
+  { value: 9, size: "w-5 h-5" },
+].map(({ value, size }) => (
+  <button
+    key={value}
+    onClick={() => setPencilStrokeWidth(value)}
+    className={`w-8 h-8 rounded-sm flex items-center justify-center transition-all ${
+      pencilStrokeWidth === value
+        ? "bg-base-content/15"
+        : "hover:bg-base-content/10"
+    }`}
+  >
+    <div
+      className={`${size} rounded-full ${
+        pencilStrokeWidth === value
+          ? "bg-base-content"
+          : "bg-base-content/40"
+      }`}
+    />
+  </button>
+))}
+        </div>
+      </div>
+    );
+  }
   if (!selectedShape) return null;
 
   const isText = selectedShape.type === "text";
@@ -86,7 +141,11 @@ export default function SelectionControls({
                   data-tip="Color"
                   tabIndex={0}
                 >
-                  {selectedShape ? <Circle fill ={fillHex} /> : <Ban size={18} />}
+                  {selectedShape ? (
+                    <Circle fill={fillHex} />
+                  ) : (
+                    <Ban size={18} />
+                  )}
                   <FaCaretDown size={10} />
                 </div>
                 <ul
@@ -253,7 +312,11 @@ export default function SelectionControls({
                   data-tip="Color"
                   tabIndex={0}
                 >
-                  {selectedShape?.fill ? <Circle fill={fillHex} size={18}/> : <Ban size={18} />}
+                  {selectedShape?.fill ? (
+                    <Circle fill={fillHex} size={18} />
+                  ) : (
+                    <Ban size={18} />
+                  )}
                   <FaCaretDown size={10} />
                 </div>
                 <ul
@@ -451,11 +514,11 @@ export default function SelectionControls({
               <div
                 className="tooltip p-2! flex justify-center items-center gap-1"
                 data-tip="Attach Notes, Code & Links"
-                onClick={()=>setContextShape(selectedShape)}
+                onClick={() => setContextShape(selectedShape)}
               >
                 <IoDocumentAttachOutline size={18} />
                 <FaCaretDown size={10} />
-              </div>  
+              </div>
             </div>
           </li>
         </ul>

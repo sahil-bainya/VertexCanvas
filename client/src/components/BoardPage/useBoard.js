@@ -8,7 +8,6 @@ import { useSelector } from "react-redux";
 
 export function useBoard() {
   const theme = useSelector((state) => state.theme.mode);
-  console.log(theme);
   const getDefaultStrokeColor = () =>
     theme === "dark" || theme === "luxury" || theme === "sunset"
       ? "#ffffff"
@@ -35,6 +34,14 @@ export function useBoard() {
 
   const [pendingShapeType, setPendingShapeType] = useState(null);
 
+  const [isDrawing, setIsDrawing] = useState(false);
+  const currentFreehandId = useRef(null); // jo-shape-abhi-draw-ho-rahi-hai, uski-id-yaad-rakhne-ke-liye
+  const [pencilColor, setPencilColor] = useState(getDefaultStrokeColor());
+  const [pencilStrokeWidth, setPencilStrokeWidth] = useState(3);
+
+ const [fullScreen, setFullScreen] = useState(false);
+
+
   useEffect(() => {
     const newColor = getDefaultStrokeColor();
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -52,6 +59,7 @@ export function useBoard() {
         a.isDefaultColor ? { ...a, stroke: newColor, fill: newColor } : a,
       ),
     );
+    setPencilColor(getDefaultStrokeColor());
   }, [theme]);
 
   // export
@@ -184,7 +192,7 @@ export function useBoard() {
   };
 
   const handleTextDblClick = (id) => {
-    const node = shapeRefs.current[id];
+     const node = shapeRefs.current[id];
     const stage = stageRef.current;
 
     node.hide();
@@ -448,7 +456,7 @@ export function useBoard() {
 
   useEffect(() => {
     const updateSize = () => {
-      const toolbarHeight = toolbarRef.current?.offsetHeight || 50;
+      const toolbarHeight = fullScreen ? 0 : (toolbarRef.current?.offsetHeight || 50);
       setStageSize({
         width: window.innerWidth,
         height: window.innerHeight - toolbarHeight,
@@ -457,76 +465,77 @@ export function useBoard() {
     updateSize();
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
-  }, []);
+  }, [fullScreen]);
 
-const autoSaveTimer = useRef(null);
-const isInitialLoad = useRef(true); // taaki "load-hote-hi-save"-na-ho-jaaye
+  const autoSaveTimer = useRef(null);
+  const isInitialLoad = useRef(true); // taaki "load-hote-hi-save"-na-ho-jaaye
 
-useEffect(() => {
-  // pehli-baar-jab-board-load-hota-hai, "shapes"-empty-se-populate-hota-hai — yeh-save-trigger-nahi-karna
-  if (isInitialLoad.current) {
-    isInitialLoad.current = false;
-    return;
-  }
+  useEffect(() => {
+    // pehli-baar-jab-board-load-hota-hai, "shapes"-empty-se-populate-hota-hai — yeh-save-trigger-nahi-karna
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
 
-  if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
 
-  autoSaveTimer.current = setTimeout(() => {
-    saveBoard(arrows); 
-  }, 6000); // 1.5-second-debounce
+    autoSaveTimer.current = setTimeout(() => {
+      saveBoard(arrows);
+    }, 6000); // 1.5-second-debounce
 
-  return () => clearTimeout(autoSaveTimer.current);
-}, [shapes, arrows]);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [shapes, arrows]);
 
-const [isDrawing, setIsDrawing] = useState(false);
-const currentFreehandId = useRef(null); // jo-shape-abhi-draw-ho-rahi-hai, uski-id-yaad-rakhne-ke-liye
+  const startFreehandDraw = (x, y) => {
+    saveHistory();
+    const id = crypto.randomUUID();
+    currentFreehandId.current = id;
 
-const startFreehandDraw = (x, y) => {
-  saveHistory();
-  const id = crypto.randomUUID();
-  currentFreehandId.current = id;
-  const color = getDefaultStrokeColor();
+    setShapes((prev) => [
+      ...prev,
+      {
+        id,
+        type: "freehand",
+        x: 0, // freehand-ke-liye-x,y-ka-koi-special-matlab-nahi, points-absolute-hain
+        y: 0,
+        points: [x, y], // ← shuru-ka-pehla-point
 
-  setShapes((prev) => [
-    ...prev,
-    {
-      id,
-      type: "freehand",
-      x: 0, // freehand-ke-liye-x,y-ka-koi-special-matlab-nahi, points-absolute-hain
-      y: 0,
-      points: [x, y], // ← shuru-ka-pehla-point
-      stroke: color,
-      strokeWidth: 3,
-      lineCap: "round",
-      lineJoin: "round",
-      isDefaultColor: true,
-      context: { notes: [], links: [], code: "" },
-    },
-  ]);
-  setIsDrawing(true);
-};
+        stroke: pencilColor, // ← yeh-change-karo (pehle-shayad-getDefaultStrokeColor()-tha)
+        strokeWidth: pencilStrokeWidth,
+        lineCap: "round",
+        lineJoin: "round",
+        isDefaultColor: true,
+        context: { notes: [], links: [], code: "" },
+      },
+    ]);
+    setIsDrawing(true);
+  };
 
-const continueFreehandDraw = (x, y) => {
-  if (!isDrawing || !currentFreehandId.current) return;
+  const continueFreehandDraw = (x, y) => {
+    if (!isDrawing || !currentFreehandId.current) return;
 
-  setShapes((prev) =>
-    prev.map((s) =>
-      s.id === currentFreehandId.current
-        ? { ...s, points: [...s.points, x, y] } // ← naya-point-add-karte-jao
-        : s
-    )
-  );
-};
+    setShapes((prev) =>
+      prev.map((s) =>
+        s.id === currentFreehandId.current
+          ? { ...s, points: [...s.points, x, y] } // ← naya-point-add-karte-jao
+          : s,
+      ),
+    );
+  };
 
-const endFreehandDraw = () => {
-  setIsDrawing(false);
-  currentFreehandId.current = null;
-};
+  const endFreehandDraw = () => {
+    setIsDrawing(false);
+    currentFreehandId.current = null;
+  };
   return {
+    pencilColor,
+    setPencilColor,
+    pencilStrokeWidth,
+    setPencilStrokeWidth,
     isDrawing,
-  startFreehandDraw,
-  continueFreehandDraw,
-  endFreehandDraw,
+    startFreehandDraw,
+    continueFreehandDraw,
+    endFreehandDraw,
     saveHistory,
     zoomIn,
     zoomOut,
@@ -572,6 +581,6 @@ const endFreehandDraw = () => {
     canvasChangedSinceAI,
     setCanvasChangedSinceAI,
     pendingShapeType,
-    setPendingShapeType,
+    setPendingShapeType,fullScreen, setFullScreen
   };
 }
