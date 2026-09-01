@@ -5,15 +5,18 @@ import { useParams } from "react-router-dom";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getShapeCenter, getShapeEdgePoint } from "./canvasHelper.js";
 import { useSelector } from "react-redux";
+import { useSocket } from "./useSocket.js";
 
 export function useBoard() {
+  const { id } = useParams();
+  const boardId = id;
   const theme = useSelector((state) => state.theme.mode);
+
   const getDefaultStrokeColor = () =>
     theme === "dark" || theme === "luxury" || theme === "sunset"
       ? "#ffffff"
       : "#000000";
 
-  const { id } = useParams();
   const [shapes, setShapes] = useState([]);
   const [arrows, setArrows] = useState([]);
   const [boardNotes, setBoardNotes] = useState([]);
@@ -39,8 +42,37 @@ export function useBoard() {
   const [pencilColor, setPencilColor] = useState(getDefaultStrokeColor());
   const [pencilStrokeWidth, setPencilStrokeWidth] = useState(3);
 
- const [fullScreen, setFullScreen] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
 
+  const handleRemoteShapeMoved = ({ shapeId, x, y, rotation }) => {
+    setShapes((prev) =>
+      prev.map((s) => (s.id === shapeId ? { ...s, x, y, rotation } : s)),
+    );
+  };
+
+  const handleRemoteShapeAdded = ({ id, x, y, type }) => {
+    const color = getDefaultStrokeColor();
+    setShapes((prev) => [
+      ...prev,
+      {
+        id,
+        type,
+        x,
+        y,
+        ...SHAPE_CONFIG[type].defaults,
+        ...(type === "text"
+          ? { fill: color, isDefaultColor: true }
+          : { stroke: color, isDefaultColor: true }),
+        context: { notes: "", links: [], code: "" },
+      },
+    ]);
+  };
+  
+  const socketRef = useSocket(
+    boardId,
+    handleRemoteShapeMoved,
+    handleRemoteShapeAdded,
+  );
 
   useEffect(() => {
     const newColor = getDefaultStrokeColor();
@@ -192,7 +224,7 @@ export function useBoard() {
   };
 
   const handleTextDblClick = (id) => {
-     const node = shapeRefs.current[id];
+    const node = shapeRefs.current[id];
     const stage = stageRef.current;
 
     node.hide();
@@ -280,23 +312,44 @@ export function useBoard() {
       },
     ]);
     setSelectedId(id);
+    if (socketRef.current) {
+      socketRef.current.emit("shape-added", {
+        boardId: boardId,
+        shapeId: id,
+        x: x,
+        y: y,
+        type: type,
+      });
+    }
   };
 
   const handleDragEnd = (e, id, updateArrowPoints) => {
     saveHistory();
+    const newX = e.target.x();
+    const newY = e.target.y();
+    const newRotation = e.target.rotation();
     setShapes((prev) =>
       prev.map((s) =>
         s.id === id
           ? {
               ...s,
-              x: e.target.x(),
-              y: e.target.y(),
-              rotation: e.target.rotation(),
+              x: newX,
+              y: newY,
+              rotation: newRotation,
             }
           : s,
       ),
     );
     updateArrowPoints(id);
+    if (socketRef.current) {
+      socketRef.current.emit("shape-moved", {
+        boardId: boardId,
+        shapeId: id,
+        x: newX,
+        y: newY,
+        rotation: newRotation,
+      });
+    }
   };
 
   const deleteSelected = (id, removeArrowsForShape) => {
@@ -456,7 +509,9 @@ export function useBoard() {
 
   useEffect(() => {
     const updateSize = () => {
-      const toolbarHeight = fullScreen ? 0 : (toolbarRef.current?.offsetHeight || 50);
+      const toolbarHeight = fullScreen
+        ? 0
+        : toolbarRef.current?.offsetHeight || 50;
       setStageSize({
         width: window.innerWidth,
         height: window.innerHeight - toolbarHeight,
@@ -527,6 +582,7 @@ export function useBoard() {
     setIsDrawing(false);
     currentFreehandId.current = null;
   };
+
   return {
     pencilColor,
     setPencilColor,
@@ -581,6 +637,9 @@ export function useBoard() {
     canvasChangedSinceAI,
     setCanvasChangedSinceAI,
     pendingShapeType,
-    setPendingShapeType,fullScreen, setFullScreen
+    setPendingShapeType,
+    fullScreen,
+    setFullScreen,
+    socketRef,
   };
 }
