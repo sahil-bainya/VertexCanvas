@@ -22,7 +22,7 @@ export default function Menubar() {
         </Link>
       </li>
       <li>
-        <ToggleTheme/>
+        <ToggleTheme text="Appearance" style="flex items-center gap-1.5"/>
       </li>
       <li className="rounded-lg px-4! py-2! ">
         <LogoutBtn />

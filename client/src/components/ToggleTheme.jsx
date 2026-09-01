@@ -1,27 +1,27 @@
 import { useSelector, useDispatch } from "react-redux";
 import { setTheme } from "../store/themeSlice.js";
 import { Palette, ChevronRight } from "lucide-react";
-export default function ToggleTheme() {
+export default function ToggleTheme({text="",style=""}) {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.theme.mode);
-
+  const PaletteSize = text==="" ? 18 : 15;
   const handleToggle = (evt) => {
     evt.stopPropagation();
     dispatch(setTheme(evt.target.value));
   };
 
   return (
-    <div className="dropdown dropdown-left rounded-lg px-4! py-2!">
+    <div className={`dropdown dropdown-left rounded-lg ${text && "px-4! py-2!"}`}>
       <div
         tabIndex={0}
         role="button"
         className="flex items-center justify-between gap-2 px-3 py-2 rounded-md text-sm"
       >
-        <span className="flex items-center gap-1.5">
-          <Palette size={15} />
-          Appearance
+        <span className={`${style}`}>
+          <Palette size={PaletteSize} />
+          {text}
         </span>
-        <ChevronRight size={15} />
+        {text && <ChevronRight size={15} />}
       </div>
       <ul
         tabIndex="-1"

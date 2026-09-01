@@ -91,7 +91,7 @@ export default function Toolbar({
                     setPendingShapeType(type);
                   }}
                   className={
-                    pendingShapeType === type 
+                    pendingShapeType === type
                       ? "bg-primary p-2! rounded-md text-primary-content"
                       : " p-2!"
                   }
@@ -246,7 +246,12 @@ export default function Toolbar({
             <BrushCleaning size={18} />
           </button>
         </div>
-        <ToggleTheme />
+        <div className="tooltip tooltip-bottom" data-tip="Change theme">
+          <ToggleTheme
+            style="btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!"
+            className={`${theme === "dark" && "border border-primary/40"}`}
+          />
+        </div>
       </div>
     </div>
   );
