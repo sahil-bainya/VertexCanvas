@@ -12,7 +12,7 @@ export default function Header() {
     <nav>
       <div className="navbar bg-base-100 shadow-sm h-16 px-4!">
         <div className="flex-1 pl-2!">
-          <a className="btn btn-ghost text-lg font-semibold tracking-tight">
+          <a >
             <AppName />
           </a>
         </div>
