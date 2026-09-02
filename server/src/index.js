@@ -36,6 +36,19 @@ io.on("connection", (socket) => {
     socket.to(boardId).emit("shape-added", { shapeId, x, y, type });
   });
 
+  socket.on("shape-deleted", ({ boardId, shapeId }) => {
+    socket.to(boardId).emit("shape-deleted", { shapeId });
+  });
+
+  socket.on("shape-transformed", (data) => {
+    const { boardId, shapeId, ...rest } = data;
+    socket.to(boardId).emit("shape-transformed", { shapeId, ...rest });
+  });
+
+  socket.on("connect-arrow", ({ boardId, arrowId, fromId, toId }) => {
+    socket.to(boardId).emit("connect-arrow", { arrowId, fromId, toId });
+  });
+
   socket.on("disconnect", () => {
     // console.log("User disconnected:", socket.id);
   });

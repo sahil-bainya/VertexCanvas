@@ -44,18 +44,32 @@ export function useBoard() {
 
   const [fullScreen, setFullScreen] = useState(false);
 
+  const saveHistory = () => {
+    setPast((prev) => [...prev, { shapes, arrows }]);
+    setFuture([]);
+    setCanvasChangedSinceAI(true);
+  };
+
+  const removeArrowsForShape = (id) => {
+    saveHistory();
+    setArrows((prev) => prev.filter((a) => a.from !== id && a.to !== id));
+  };
+
   const handleRemoteShapeMoved = ({ shapeId, x, y, rotation }) => {
+    saveHistory();
     setShapes((prev) =>
       prev.map((s) => (s.id === shapeId ? { ...s, x, y, rotation } : s)),
     );
   };
 
-  const handleRemoteShapeAdded = ({ id, x, y, type }) => {
+  const handleRemoteShapeAdded = ({ shapeId, x, y, type }) => {
     const color = getDefaultStrokeColor();
+    saveHistory();
     setShapes((prev) => [
+      // <line 68
       ...prev,
       {
-        id,
+        id: shapeId,
         type,
         x,
         y,
@@ -67,11 +81,69 @@ export function useBoard() {
       },
     ]);
   };
-  
+
+  const handleRemoteShapeDeleted = (shapeId) => {
+    console.log(`handle remote shape deleted ${shapeId}`);
+    saveHistory();
+    setShapes((prev) => prev.filter((s) => s.id !== shapeId));
+    removeArrowsForShape(shapeId);
+  };
+
+  const handleRemoteShapeTransformed = ({
+    shapeId,
+    x,
+    y,
+    rotation,
+    ...rest
+  }) => {
+    saveHistory();
+    setShapes((prev) =>
+      prev.map((s) =>
+        s.id === shapeId
+          ? {
+              ...s,
+              x,
+              y,
+              rotation,
+              ...rest,
+            }
+          : s,
+      ),
+    );
+  };
+
+  const handleRemoteArrowConnected = ({ arrowId, fromId, toId }) => {
+    console.log(arrowId, fromId, toId )
+    saveHistory();
+    const color = getDefaultStrokeColor();
+    const fromShape = shapes.find((s) => s.id === fromId);
+    const toShape = shapes.find((s) => s.id === toId);
+    const fromNode = shapeRefs.current[fromId];
+    const toNode = shapeRefs.current[toId];
+    const fromCenter = getShapeCenter(fromNode, fromShape);
+    const toCenter = getShapeCenter(toNode, toShape);
+    const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
+    const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
+    setArrows((prev) => [
+      ...prev,
+      {
+        id: arrowId,
+        from: fromId,
+        to: toId,
+        points: [from.x, from.y, to.x, to.y],
+        stroke: color,
+        fill: color,
+        isDefaultColor: true,
+      },
+    ]);
+  };
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
     handleRemoteShapeAdded,
+    handleRemoteShapeDeleted,
+    handleRemoteShapeTransformed,
+    handleRemoteArrowConnected,
   );
 
   useEffect(() => {
@@ -119,12 +191,6 @@ export function useBoard() {
     pdf.save(`${boardName || "board"}.pdf`);
   };
   // undo , redo
-
-  const saveHistory = () => {
-    setPast((prev) => [...prev, { shapes, arrows }]);
-    setFuture([]);
-    setCanvasChangedSinceAI(true);
-  };
 
   const undo = () => {
     if (past.length === 0) return;
@@ -194,33 +260,40 @@ export function useBoard() {
   };
 
   const connectShapes = (fromId, toId) => {
-    saveHistory();
-    const color = getDefaultStrokeColor();
-    const fromShape = shapes.find((s) => s.id === fromId);
-    const toShape = shapes.find((s) => s.id === toId);
-    const fromNode = shapeRefs.current[fromId];
-    const toNode = shapeRefs.current[toId];
-    const fromCenter = getShapeCenter(fromNode, fromShape);
-    const toCenter = getShapeCenter(toNode, toShape);
-    const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
-    const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
-    setArrows((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        from: fromId,
-        to: toId,
-        points: [from.x, from.y, to.x, to.y],
-        stroke: color, // ← add karo
-        fill: color, // ← arrows mein fill bhi arrowhead ke liye matter karta hai
-        isDefaultColor: true, // ←
-      },
-    ]);
-  };
-
-  const removeArrowsForShape = (id) => {
-    saveHistory();
-    setArrows((prev) => prev.filter((a) => a.from !== id && a.to !== id));
+    // saveHistory();
+    // const color = getDefaultStrokeColor();
+    // const fromShape = shapes.find((s) => s.id === fromId);
+    // const toShape = shapes.find((s) => s.id === toId);
+    // const fromNode = shapeRefs.current[fromId];
+    // console.log(`from node : ${fromNode}`)
+    // console.log(fromNode)
+    // const toNode = shapeRefs.current[toId];
+    //  console.log(`to node : ${toNode}`)
+    // const fromCenter = getShapeCenter(fromNode, fromShape);
+    // const toCenter = getShapeCenter(toNode, toShape);
+    // const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
+    // const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
+    // const arrowId = crypto.randomUUID();
+    // setArrows((prev) => [
+    //   ...prev,
+    //   {
+    //     id: arrowId,
+    //     from: fromId,
+    //     to: toId,
+    //     points: [from.x, from.y, to.x, to.y],
+    //     stroke: color,
+    //     fill: color,
+    //     isDefaultColor: true, // ←
+    //   },
+    // ]);
+    // if (socketRef.current) {
+    //   socketRef.current.emit("connect-arrow", {
+    //     boardId,
+    //     arrowId,
+    //     fromId,
+    //     toId,
+    //   });
+    // }
   };
 
   const handleTextDblClick = (id) => {
@@ -311,6 +384,7 @@ export function useBoard() {
         context: { notes: "", links: [], code: "" },
       },
     ]);
+    console.log("add shape moved called ", id);
     setSelectedId(id);
     if (socketRef.current) {
       socketRef.current.emit("shape-added", {
@@ -341,6 +415,7 @@ export function useBoard() {
       ),
     );
     updateArrowPoints(id);
+    console.log("handle drag end called ", id);
     if (socketRef.current) {
       socketRef.current.emit("shape-moved", {
         boardId: boardId,
@@ -357,6 +432,12 @@ export function useBoard() {
     setShapes((prev) => prev.filter((s) => s.id !== id));
     removeArrowsForShape(id);
     setSelectedId(null);
+    if (socketRef.current) {
+      socketRef.current.emit("shape-deleted", {
+        boardId: boardId,
+        shapeId: id,
+      });
+    }
   };
 
   const handleTransformEnd = (id) => {
@@ -448,19 +529,32 @@ export function useBoard() {
           return { points: newPoints };
         },
       }[shape.type]?.() ?? {};
+    const updatedX = node.x();
+    const updatedY = node.y();
+    const updatedRotation = node.rotation();
     setShapes((prev) =>
       prev.map((s) =>
         s.id === id
           ? {
               ...s,
-              x: node.x(),
-              y: node.y(),
-              rotation: node.rotation(), // ← yeh add karo
+              x: updatedX,
+              y: updatedY,
+              rotation: updatedRotation,
               ...updatedFields,
             }
           : s,
       ),
     );
+    if (socketRef.current) {
+      socketRef.current.emit("shape-transformed", {
+        boardId: boardId,
+        shapeId: id,
+        x: updatedX,
+        y: updatedY,
+        rotation: updatedRotation,
+        ...updatedFields,
+      });
+    }
   };
 
   const saveBoard = async (arrows) => {

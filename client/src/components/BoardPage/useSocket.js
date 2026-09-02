@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-export function useSocket(boardId, onShapeMoved ,onShapeAdded) {
+export function useSocket(boardId, onShapeMoved ,onShapeAdded,onShapedeleted,onShapeTransformed,onArrowConnected) {
   const socketRef = useRef(null);
   useEffect(() => {
     // connection-banao
@@ -22,6 +22,18 @@ export function useSocket(boardId, onShapeMoved ,onShapeAdded) {
 
     socketRef.current.on("shape-added", ({ shapeId, x, y, type }) => {
       onShapeAdded({shapeId,x,y,type})
+    });
+
+    socketRef.current.on("shape-deleted", ({ shapeId}) => {
+      onShapedeleted(shapeId)
+    });
+
+    socketRef.current.on("shape-transformed", (data) => {
+      onShapeTransformed(data)
+    });
+
+    socketRef.current.on("connect-arrow", ({ arrowId, fromId, toId}) => {
+      onArrowConnected({ arrowId, fromId, toId})
     });
 
     return () => {

@@ -193,14 +193,15 @@ export const getTextPosition = (shape) => {
   return { x: shape.x, y: shape.y, width: 100 };
 };
 
-
-
 export const getExistingContentBounds = (shapes) => {
   if (shapes.length === 0) {
-    return null; // canvas-khali-hai
+    return null;
   }
 
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
 
   shapes.forEach((shape) => {
     let shapeMinX, shapeMaxX, shapeMinY, shapeMaxY;
@@ -220,7 +221,6 @@ export const getExistingContentBounds = (shapes) => {
       shapeMinY = shape.y + Math.min(...ys);
       shapeMaxY = shape.y + Math.max(...ys);
     } else {
-      // rect, roundedRect
       shapeMinX = shape.x;
       shapeMaxX = shape.x + (shape.width || 100);
       shapeMinY = shape.y;
