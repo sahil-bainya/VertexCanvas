@@ -28,6 +28,7 @@ export function useBoard() {
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
   const shapeRefs = useRef({});
+
   const toolbarRef = useRef(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
 
@@ -54,12 +55,54 @@ export function useBoard() {
     saveHistory();
     setArrows((prev) => prev.filter((a) => a.from !== id && a.to !== id));
   };
+  const updateColorEmiter = (shapeId, key, value) => {
+    if (socketRef.current) {
+      socketRef.current.emit("color-updated", {
+        boardId,
+        shapeId,
+        key,
+        value,
+      });
+    }
+  };
+  const updateArrowPoints = (movedId) => {
+    console.log("move arrow id ", movedId);
+    setArrows((prev) =>
+      prev.map((arrow) => {
+        if (arrow.from !== movedId && arrow.to !== movedId) return arrow;
+        const fromShape = shapes.find((s) => s.id === arrow.from);
+        const toShape = shapes.find((s) => s.id === arrow.to);
+        const fromNode = shapeRefs.current[arrow.from];
+        const toNode = shapeRefs.current[arrow.to];
+        const fromCenter = getShapeCenter(fromNode, fromShape);
+        const toCenter = getShapeCenter(toNode, toShape);
+        console.log(`fromNode  - ${fromNode}`);
+        console.log(`fromShape  - ${fromShape}`);
+        console.log(`toCenter.x  - ${toCenter.x}`);
+        console.log(`toCenter.y  - ${toCenter.y}`);
+        const from = getShapeEdgePoint(
+          fromNode,
+          fromShape,
+          toCenter.x,
+          toCenter.y,
+        );
+        const to = getShapeEdgePoint(
+          toNode,
+          toShape,
+          fromCenter.x,
+          fromCenter.y,
+        );
+        return { ...arrow, points: [from.x, from.y, to.x, to.y] };
+      }),
+    );
+  };
 
   const handleRemoteShapeMoved = ({ shapeId, x, y, rotation }) => {
     saveHistory();
     setShapes((prev) =>
       prev.map((s) => (s.id === shapeId ? { ...s, x, y, rotation } : s)),
     );
+    updateArrowPoints(shapeId);
   };
 
   const handleRemoteShapeAdded = ({ shapeId, x, y, type }) => {
@@ -112,31 +155,45 @@ export function useBoard() {
     );
   };
 
-  const handleRemoteArrowConnected = ({ arrowId, fromId, toId }) => {
-    console.log(arrowId, fromId, toId )
-    saveHistory();
-    const color = getDefaultStrokeColor();
-    const fromShape = shapes.find((s) => s.id === fromId);
-    const toShape = shapes.find((s) => s.id === toId);
-    const fromNode = shapeRefs.current[fromId];
-    const toNode = shapeRefs.current[toId];
-    const fromCenter = getShapeCenter(fromNode, fromShape);
-    const toCenter = getShapeCenter(toNode, toShape);
-    const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
-    const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
+  const handleRemoteArrowConnected = ({
+    arrowId,
+    fromId,
+    toId,
+    points,
+    stroke,
+    fill,
+  }) => {
     setArrows((prev) => [
       ...prev,
       {
         id: arrowId,
         from: fromId,
         to: toId,
-        points: [from.x, from.y, to.x, to.y],
-        stroke: color,
-        fill: color,
+        points,
+        stroke,
+        fill,
         isDefaultColor: true,
       },
     ]);
   };
+
+  const handleRemoteLabelUpdated = ({ shapeId, updatedText }) => {
+    saveHistory();
+    console.log(`${shapeId} text ${updatedText}`);
+    setShapes((prevShapes) =>
+      prevShapes.map((s) =>
+        s.id === shapeId ? { ...s, text: updatedText } : s,
+      ),
+    );
+  };
+
+  const handleRemoteColorUpdated = ({ shapeId, key, value }) => {
+    saveHistory();
+    setShapes((prev) =>
+      prev.map((s) => (s.id === shapeId ? { ...s, [key]: value } : s)),
+    );
+  };
+
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
@@ -144,6 +201,8 @@ export function useBoard() {
     handleRemoteShapeDeleted,
     handleRemoteShapeTransformed,
     handleRemoteArrowConnected,
+    handleRemoteLabelUpdated,
+    handleRemoteColorUpdated,
   );
 
   useEffect(() => {
@@ -166,6 +225,16 @@ export function useBoard() {
     setPencilColor(getDefaultStrokeColor());
   }, [theme]);
 
+  const addLabel = (shapeId, updatedText) => {
+    console.log(`${shapeId} text - ${updatedText}`);
+    if (socketRef.current) {
+      socketRef.current.emit("label-updated", {
+        boardId,
+        shapeId,
+        updatedText,
+      });
+    }
+  };
   // export
   const exportPNG = () => {
     const stage = stageRef.current;
@@ -232,68 +301,45 @@ export function useBoard() {
     });
   };
 
-  const updateArrowPoints = (movedId) => {
-    setArrows((prev) =>
-      prev.map((arrow) => {
-        if (arrow.from !== movedId && arrow.to !== movedId) return arrow;
-        const fromShape = shapes.find((s) => s.id === arrow.from);
-        const toShape = shapes.find((s) => s.id === arrow.to);
-        const fromNode = shapeRefs.current[arrow.from];
-        const toNode = shapeRefs.current[arrow.to];
-        const fromCenter = getShapeCenter(fromNode, fromShape);
-        const toCenter = getShapeCenter(toNode, toShape);
-        const from = getShapeEdgePoint(
-          fromNode,
-          fromShape,
-          toCenter.x,
-          toCenter.y,
-        );
-        const to = getShapeEdgePoint(
-          toNode,
-          toShape,
-          fromCenter.x,
-          fromCenter.y,
-        );
-        return { ...arrow, points: [from.x, from.y, to.x, to.y] };
-      }),
-    );
-  };
-
   const connectShapes = (fromId, toId) => {
-    // saveHistory();
-    // const color = getDefaultStrokeColor();
-    // const fromShape = shapes.find((s) => s.id === fromId);
-    // const toShape = shapes.find((s) => s.id === toId);
-    // const fromNode = shapeRefs.current[fromId];
-    // console.log(`from node : ${fromNode}`)
-    // console.log(fromNode)
-    // const toNode = shapeRefs.current[toId];
-    //  console.log(`to node : ${toNode}`)
-    // const fromCenter = getShapeCenter(fromNode, fromShape);
-    // const toCenter = getShapeCenter(toNode, toShape);
-    // const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
-    // const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
-    // const arrowId = crypto.randomUUID();
-    // setArrows((prev) => [
-    //   ...prev,
-    //   {
-    //     id: arrowId,
-    //     from: fromId,
-    //     to: toId,
-    //     points: [from.x, from.y, to.x, to.y],
-    //     stroke: color,
-    //     fill: color,
-    //     isDefaultColor: true, // ←
-    //   },
-    // ]);
-    // if (socketRef.current) {
-    //   socketRef.current.emit("connect-arrow", {
-    //     boardId,
-    //     arrowId,
-    //     fromId,
-    //     toId,
-    //   });
-    // }
+    saveHistory();
+    const color = getDefaultStrokeColor();
+    const fromShape = shapes.find((s) => s.id === fromId);
+    const toShape = shapes.find((s) => s.id === toId);
+    const fromNode = shapeRefs.current[fromId];
+    console.log(`from node : ${fromNode}`);
+    console.log(fromNode);
+    const toNode = shapeRefs.current[toId];
+    console.log(`to node : ${toNode}`);
+    const fromCenter = getShapeCenter(fromNode, fromShape);
+    const toCenter = getShapeCenter(toNode, toShape);
+    const from = getShapeEdgePoint(fromNode, fromShape, toCenter.x, toCenter.y);
+    const to = getShapeEdgePoint(toNode, toShape, fromCenter.x, fromCenter.y);
+    const arrowId = crypto.randomUUID();
+    const points = [from.x, from.y, to.x, to.y];
+    setArrows((prev) => [
+      ...prev,
+      {
+        id: arrowId,
+        from: fromId,
+        to: toId,
+        points: [from.x, from.y, to.x, to.y],
+        stroke: color,
+        fill: color,
+        isDefaultColor: true, // ←
+      },
+    ]);
+    if (socketRef.current) {
+      socketRef.current.emit("arrow-connected", {
+        boardId,
+        arrowId,
+        fromId,
+        toId,
+        points,
+        stroke: color,
+        fill: color,
+      });
+    }
   };
 
   const handleTextDblClick = (id) => {
@@ -352,6 +398,13 @@ export function useBoard() {
       setShapes((prev) =>
         prev.map((s) => (s.id === id ? { ...s, text: textarea.value } : s)),
       );
+      if (socketRef.current) {
+        socketRef.current.emit("label-updated", {
+          boardId,
+          shapeId: id,
+          updatedText: textarea.value,
+        });
+      }
       textarea.removeEventListener("input", autoResize);
       document.body.removeChild(textarea);
       node.show();
@@ -397,7 +450,7 @@ export function useBoard() {
     }
   };
 
-  const handleDragEnd = (e, id, updateArrowPoints) => {
+  const handleDragEnd = (e, id) => {
     saveHistory();
     const newX = e.target.x();
     const newY = e.target.y();
@@ -735,5 +788,7 @@ export function useBoard() {
     fullScreen,
     setFullScreen,
     socketRef,
+    addLabel,
+    updateColorEmiter,
   };
 }

@@ -2,57 +2,16 @@ import dotenv from "dotenv";
 dotenv.config({
   path: "./.env",
 });
-import http from "http"; // ← naya-import
-import { Server } from "socket.io"; // ← naya-import
+import http from "http"; 
 import app from "./app.js";
 import connectDB from "./db/index.js";
+import { initSocket } from "./socket.js";
 
 const PORT = process.env.PORT;
 
-const httpServer = http.createServer(app); // ← naya — Express-ko-HTTP-server-mein-wrap-kiya
+const httpServer = http.createServer(app);
 
-const io = new Server(httpServer, {
-  // ← naya — Socket.io-attach-kiya
-  cors: {
-    origin: "http://localhost:5173", // frontend-ka-URL, jaisa-Express-CORS-mein-hai
-    credentials: true,
-  },
-});
-
-// Basic-connection-test — yeh-abhi-ke-liye
-io.on("connection", (socket) => {
-  // console.log("A user connected:", socket.id);
-
-  socket.on("join-board", (boardId) => {
-    socket.join(boardId);
-    // console.log(`Socket ${socket.id} joined board ${boardId}`);
-  });
-
-  socket.on("shape-moved", ({ boardId, shapeId, x, y, rotation }) => {
-    socket.to(boardId).emit("shape-moved", { shapeId, x, y, rotation });
-  });
-
-  socket.on("shape-added", ({ boardId, shapeId, x, y, type }) => {
-    socket.to(boardId).emit("shape-added", { shapeId, x, y, type });
-  });
-
-  socket.on("shape-deleted", ({ boardId, shapeId }) => {
-    socket.to(boardId).emit("shape-deleted", { shapeId });
-  });
-
-  socket.on("shape-transformed", (data) => {
-    const { boardId, shapeId, ...rest } = data;
-    socket.to(boardId).emit("shape-transformed", { shapeId, ...rest });
-  });
-
-  socket.on("connect-arrow", ({ boardId, arrowId, fromId, toId }) => {
-    socket.to(boardId).emit("connect-arrow", { arrowId, fromId, toId });
-  });
-
-  socket.on("disconnect", () => {
-    // console.log("User disconnected:", socket.id);
-  });
-});
+initSocket(httpServer);
 
 connectDB()
   .then(() => {

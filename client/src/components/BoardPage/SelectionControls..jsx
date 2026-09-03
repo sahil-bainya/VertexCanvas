@@ -14,6 +14,7 @@ import { FaGripLines, FaCaretDown } from "react-icons/fa";
 import { Ban, Circle, Type } from "lucide-react";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import "./Toolbar.css";
+
 export default function SelectionControls({
   shapes,
   selectedId,
@@ -25,6 +26,8 @@ export default function SelectionControls({
   setPencilColor,
   pencilStrokeWidth,
   setPencilStrokeWidth,
+  addLabel,
+  updateColorEmiter,
 }) {
   const selectedShape = shapes.find((s) => s.id === selectedId);
   if (tool === "freehand" && !selectedShape) {
@@ -48,31 +51,31 @@ export default function SelectionControls({
           </div>
           <FaCaretDown size={10} className="text-base-content/40" />
         </label>
-        
+
         <div className="flex items-center gap-1">
-  {[
-  { value: 2, size: "w-2 h-2" },
-  { value: 5, size: "w-3.5 h-3.5" },
-  { value: 9, size: "w-5 h-5" },
-].map(({ value, size }) => (
-  <button
-    key={value}
-    onClick={() => setPencilStrokeWidth(value)}
-    className={`w-8 h-8 rounded-sm flex items-center justify-center transition-all ${
-      pencilStrokeWidth === value
-        ? "bg-base-content/15"
-        : "hover:bg-base-content/10"
-    }`}
-  >
-    <div
-      className={`${size} rounded-full ${
-        pencilStrokeWidth === value
-          ? "bg-base-content"
-          : "bg-base-content/40"
-      }`}
-    />
-  </button>
-))}
+          {[
+            { value: 2, size: "w-2 h-2" },
+            { value: 5, size: "w-3.5 h-3.5" },
+            { value: 9, size: "w-5 h-5" },
+          ].map(({ value, size }) => (
+            <button
+              key={value}
+              onClick={() => setPencilStrokeWidth(value)}
+              className={`w-8 h-8 rounded-sm flex items-center justify-center transition-all ${
+                pencilStrokeWidth === value
+                  ? "bg-base-content/15"
+                  : "hover:bg-base-content/10"
+              }`}
+            >
+              <div
+                className={`${size} rounded-full ${
+                  pencilStrokeWidth === value
+                    ? "bg-base-content"
+                    : "bg-base-content/40"
+                }`}
+              />
+            </button>
+          ))}
         </div>
       </div>
     );
@@ -81,11 +84,13 @@ export default function SelectionControls({
 
   const isText = selectedShape.type === "text";
   const isArrow = selectedShape.type === "arrow";
+
   const updateColor = (key, value) => {
     saveHistory();
     setShapes(
       shapes.map((s) => (s.id === selectedId ? { ...s, [key]: value } : s)),
     );
+    updateColorEmiter(selectedId, key, value);
   };
 
   const hexToRgba = (hex, opacity) => {
@@ -119,10 +124,10 @@ export default function SelectionControls({
 
   const updateText = (value) => {
     saveHistory();
-    console.log("updating text to:", value);
     setShapes(
       shapes.map((s) => (s.id === selectedId ? { ...s, text: value } : s)),
     );
+    addLabel(selectedId, value);
   };
 
   const fillOpacity = getOpacity(selectedShape.fill);

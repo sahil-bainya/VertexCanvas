@@ -25,6 +25,7 @@ export default function StageCanvas({
   startFreehandDraw,
   continueFreehandDraw,
   endFreehandDraw,
+  handleTextDblClick,
 }) {
   return (
     <Stage
@@ -84,12 +85,12 @@ export default function StageCanvas({
         }
       }}
       onMouseEnter={() => {
-    const container = stageRef.current.container();
-    if (tool === "freehand") container.style.cursor = "crosshair";
-    else if (tool === "eraser") container.style.cursor = "grab";
-    else if (pendingShapeType) container.style.cursor = "crosshair";
-    else container.style.cursor = "default";
-  }}
+        const container = stageRef.current.container();
+        if (tool === "freehand") container.style.cursor = "crosshair";
+        else if (tool === "eraser") container.style.cursor = "grab";
+        else if (pendingShapeType) container.style.cursor = "crosshair";
+        else container.style.cursor = "default";
+      }}
     >
       <Layer>
         {arrows.map((arrow) => (
@@ -115,7 +116,7 @@ export default function StageCanvas({
                 rotation={el.rotation || 0}
                 fill={el.fill}
                 stroke={el.stroke}
-                 hitStrokeWidth={isFreehand ? 20 : undefined}
+                hitStrokeWidth={isFreehand ? 20 : undefined}
                 ref={(node) => (shapeRefs.current[el.id] = node)}
                 onClick={
                   isFreehand
@@ -124,8 +125,18 @@ export default function StageCanvas({
                       : undefined
                     : (e) => handleShapeClick(e, el.id)
                 }
+                onDblClick={
+                  el.type === "text"
+                    ? () => handleTextDblClick(el.id)
+                    : undefined
+                }
+                onDblTap={
+                  el.type === "text"
+                    ? () => handleTextDblClick(el.id)
+                    : undefined
+                }
                 onDragMove={() => updateArrowPoints(el.id)}
-                onDragEnd={(e) => handleDragEnd(e, el.id, updateArrowPoints)}
+                onDragEnd={(e) => handleDragEnd(e, el.id)}
                 onTransformEnd={() => handleTransformEnd(el.id)}
                 listening={isFreehand ? tool === "eraser" : true}
                 {...getProps(el)}

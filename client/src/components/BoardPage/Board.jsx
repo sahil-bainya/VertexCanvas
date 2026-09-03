@@ -46,7 +46,7 @@ export default function Board() {
     updateArrowPoints,
     connectShapes,
     removeArrowsForShape,
-    undo,
+    undo,updateColorEmiter,
     redo,
     zoomIn,
     zoomOut,
@@ -66,9 +66,8 @@ export default function Board() {
     pencilColor,
     setPencilColor,
     pencilStrokeWidth,
-    setPencilStrokeWidth,fullScreen, setFullScreen
+    setPencilStrokeWidth,fullScreen, setFullScreen,addLabel
   } = useBoard();
-
 
   const [loading, setLoading] = useState(false); // for cleanup
   const [pendingCleanup, setPendingCleanup] = useState(false);
@@ -332,6 +331,9 @@ export default function Board() {
               setShapes={setShapes}
               saveHistory={saveHistory}
               setContextShape={setContextShape}
+              addLabel={addLabel}
+              setSelectedId={setSelectedId}
+              updateColorEmiter={updateColorEmiter}
             />
           </div>
         )}

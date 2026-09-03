@@ -1,7 +1,16 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-export function useSocket(boardId, onShapeMoved ,onShapeAdded,onShapedeleted,onShapeTransformed,onArrowConnected) {
+export function useSocket(
+  boardId,
+  onShapeMoved,
+  onShapeAdded,
+  onShapedeleted,
+  onShapeTransformed,
+  onArrowConnected,
+  onUpdateLabel,
+  onColorUpdated,
+) {
   const socketRef = useRef(null);
   useEffect(() => {
     // connection-banao
@@ -17,23 +26,29 @@ export function useSocket(boardId, onShapeMoved ,onShapeAdded,onShapedeleted,onS
     // cleanup — component-unmount-hone-pe-disconnect-karo
 
     socketRef.current.on("shape-moved", ({ shapeId, x, y, rotation }) => {
-      onShapeMoved({shapeId,x,y,rotation})
+      onShapeMoved({ shapeId, x, y, rotation });
     });
 
     socketRef.current.on("shape-added", ({ shapeId, x, y, type }) => {
-      onShapeAdded({shapeId,x,y,type})
+      onShapeAdded({ shapeId, x, y, type });
     });
 
-    socketRef.current.on("shape-deleted", ({ shapeId}) => {
-      onShapedeleted(shapeId)
+    socketRef.current.on("shape-deleted", ({ shapeId }) => {
+      onShapedeleted(shapeId);
     });
 
     socketRef.current.on("shape-transformed", (data) => {
-      onShapeTransformed(data)
+      onShapeTransformed(data);
+    });
+    socketRef.current.on("arrow-connected", (data) => {
+      onArrowConnected(data);
     });
 
-    socketRef.current.on("connect-arrow", ({ arrowId, fromId, toId}) => {
-      onArrowConnected({ arrowId, fromId, toId})
+    socketRef.current.on("label-updated", ({ shapeId, updatedText }) => {
+      onUpdateLabel({ shapeId, updatedText });
+    });
+    socketRef.current.on("color-updated", ({ shapeId, key, value }) => {
+      onColorUpdated({ shapeId, key, value });
     });
 
     return () => {

@@ -248,8 +248,7 @@ export default function Toolbar({
         </div>
         <div className="tooltip tooltip-bottom" data-tip="Change theme">
           <ToggleTheme
-            style="btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!"
-            className={`${theme === "dark" && "border border-primary/40"}`}
+            style={`${theme === "dark" && "border border-primary/40 "} btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!`}
           />
         </div>
       </div>
