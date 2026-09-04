@@ -44,6 +44,7 @@ export function useBoard() {
   const [pencilStrokeWidth, setPencilStrokeWidth] = useState(3);
 
   const [fullScreen, setFullScreen] = useState(false);
+  const [selectedArrowId, setSelectedArrowId] = useState(null);
 
   const saveHistory = () => {
     setPast((prev) => [...prev, { shapes, arrows }]);
@@ -66,7 +67,6 @@ export function useBoard() {
     }
   };
   const updateArrowPoints = (movedId) => {
-    console.log("move arrow id ", movedId);
     setArrows((prev) =>
       prev.map((arrow) => {
         if (arrow.from !== movedId && arrow.to !== movedId) return arrow;
@@ -76,10 +76,6 @@ export function useBoard() {
         const toNode = shapeRefs.current[arrow.to];
         const fromCenter = getShapeCenter(fromNode, fromShape);
         const toCenter = getShapeCenter(toNode, toShape);
-        console.log(`fromNode  - ${fromNode}`);
-        console.log(`fromShape  - ${fromShape}`);
-        console.log(`toCenter.x  - ${toCenter.x}`);
-        console.log(`toCenter.y  - ${toCenter.y}`);
         const from = getShapeEdgePoint(
           fromNode,
           fromShape,
@@ -96,13 +92,66 @@ export function useBoard() {
       }),
     );
   };
+  // Helper function to update arrows after shape update
+  const updateArrowsAfterShapeUpdate = (updatedShapeId, updatedShapes) => {
+    console.log("Updating arrows after shape update:", updatedShapeId);
+
+    setArrows((prevArrows) => {
+      return prevArrows.map((arrow) => {
+        // Only update arrows connected to this shape
+        if (arrow.from !== updatedShapeId && arrow.to !== updatedShapeId) {
+          return arrow;
+        }
+
+        const fromShape = updatedShapes.find((s) => s.id === arrow.from);
+        const toShape = updatedShapes.find((s) => s.id === arrow.to);
+        const fromNode = shapeRefs.current[arrow.from];
+        const toNode = shapeRefs.current[arrow.to];
+
+        if (!fromShape || !toShape || !fromNode || !toNode) {
+          console.log("Missing shape or node for arrow:", arrow.id);
+          return arrow;
+        }
+
+        try {
+          const fromCenter = getShapeCenter(fromNode, fromShape);
+          const toCenter = getShapeCenter(toNode, toShape);
+
+          const from = getShapeEdgePoint(
+            fromNode,
+            fromShape,
+            toCenter.x,
+            toCenter.y,
+          );
+          const to = getShapeEdgePoint(
+            toNode,
+            toShape,
+            fromCenter.x,
+            fromCenter.y,
+          );
+
+          return { ...arrow, points: [from.x, from.y, to.x, to.y] };
+        } catch (error) {
+          console.error("Error updating arrow points:", error);
+          return arrow;
+        }
+      });
+    });
+  };
 
   const handleRemoteShapeMoved = ({ shapeId, x, y, rotation }) => {
-    saveHistory();
-    setShapes((prev) =>
-      prev.map((s) => (s.id === shapeId ? { ...s, x, y, rotation } : s)),
-    );
-    updateArrowPoints(shapeId);
+    setShapes((prevShapes) => {
+      const updatedShapes = prevShapes.map((s) =>
+        s.id === shapeId ? { ...s, x, y, rotation } : s,
+      );
+
+      // Schedule arrow update after shapes are updated
+      setTimeout(() => {
+        updateArrowsAfterShapeUpdate(shapeId, updatedShapes);
+      }, 50); // Small delay to ensure Konva nodes are updated
+
+      return updatedShapes;
+    });
   };
 
   const handleRemoteShapeAdded = ({ shapeId, x, y, type }) => {
@@ -139,20 +188,18 @@ export function useBoard() {
     rotation,
     ...rest
   }) => {
-    saveHistory();
-    setShapes((prev) =>
-      prev.map((s) =>
-        s.id === shapeId
-          ? {
-              ...s,
-              x,
-              y,
-              rotation,
-              ...rest,
-            }
-          : s,
-      ),
-    );
+    setShapes((prevShapes) => {
+      const updatedShapes = prevShapes.map((s) =>
+        s.id === shapeId ? { ...s, x, y, rotation, ...rest } : s,
+      );
+
+      // Schedule arrow update after shapes are updated
+      setTimeout(() => {
+        updateArrowsAfterShapeUpdate(shapeId, updatedShapes);
+      }, 50);
+
+      return updatedShapes;
+    });
   };
 
   const handleRemoteArrowConnected = ({
@@ -194,6 +241,60 @@ export function useBoard() {
     );
   };
 
+  const handleRemoteArrowDeleted = (arrowId) => {
+    saveHistory();
+    setArrows((prev) => prev.filter((a) => a.id !== arrowId));
+  };
+
+  const handleRemoteFreehandStart = ({
+    shapeId,
+    point,
+    stroke,
+    strokeWidth,
+  }) => {
+    setShapes((prev) => [
+      ...prev,
+      {
+        id: shapeId,
+        type: "freehand",
+        x: 0,
+        y: 0,
+        points: [point.x, point.y],
+        stroke,
+        strokeWidth,
+        lineCap: "round",
+        lineJoin: "round",
+        isDefaultColor: true,
+        context: { notes: [], links: [], code: "" },
+      },
+    ]);
+  };
+
+  const handleRemoteFreehandPoints = ({ shapeId, data }) => {
+    // Convert binary to array of deltas
+    const view = new Int16Array(data);
+    const deltas = Array.from(view);
+
+    setShapes((prev) =>
+      prev.map((s) => {
+        if (s.id !== shapeId) return s;
+
+        // Reconstruct points from deltas
+        const points = [...s.points];
+        let lastX = points[points.length - 2];
+        let lastY = points[points.length - 1];
+
+        for (let i = 0; i < deltas.length; i += 2) {
+          lastX += deltas[i];
+          lastY += deltas[i + 1];
+          points.push(lastX, lastY);
+        }
+
+        return { ...s, points };
+      }),
+    );
+  };
+
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
@@ -203,6 +304,9 @@ export function useBoard() {
     handleRemoteArrowConnected,
     handleRemoteLabelUpdated,
     handleRemoteColorUpdated,
+    handleRemoteArrowDeleted,
+    handleRemoteFreehandStart,
+    handleRemoteFreehandPoints,
   );
 
   useEffect(() => {
@@ -259,7 +363,6 @@ export function useBoard() {
     pdf.addImage(dataURL, "PNG", 0, 0, stage.width(), stage.height());
     pdf.save(`${boardName || "board"}.pdf`);
   };
-  // undo , redo
 
   const undo = () => {
     if (past.length === 0) return;
@@ -585,19 +688,26 @@ export function useBoard() {
     const updatedX = node.x();
     const updatedY = node.y();
     const updatedRotation = node.rotation();
-    setShapes((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              x: updatedX,
-              y: updatedY,
-              rotation: updatedRotation,
-              ...updatedFields,
-            }
-          : s,
-      ),
-    );
+    const updatedShape = {
+      ...shape,
+      x: updatedX,
+      y: updatedY,
+      rotation: updatedRotation,
+      ...updatedFields,
+    };
+
+    // Update shapes state
+    setShapes((prev) => {
+      const updatedShapes = prev.map((s) => (s.id === id ? updatedShape : s));
+
+      // Schedule arrow update after shapes are updated
+      setTimeout(() => {
+        updateArrowsAfterShapeUpdate(id, updatedShapes);
+      }, 50);
+
+      return updatedShapes;
+    });
+
     if (socketRef.current) {
       socketRef.current.emit("shape-transformed", {
         boardId: boardId,
@@ -629,7 +739,15 @@ export function useBoard() {
     setBoardNotes(updatedNotes);
     await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
   };
+  const deleteArrow = (arrowId) => {
+    saveHistory();
+    setArrows((prev) => prev.filter((a) => a.id !== arrowId));
+    setSelectedArrowId(null);
 
+    if (socketRef.current) {
+      socketRef.current.emit("arrow-deleted", { boardId, arrowId });
+    }
+  };
   useEffect(() => {
     (async () => {
       const res = await api.get(`/boards/${id}`);
@@ -688,11 +806,42 @@ export function useBoard() {
     return () => clearTimeout(autoSaveTimer.current);
   }, [shapes, arrows]);
 
+  const freehandBuffer = useRef([]);
+  const freehandThrottleRef = useRef(null);
+  const isDrawingRef = useRef(false);
+  const lastSentPoint = useRef(null);
+  // Helper function to send buffer
+
+  const sendFreehandBuffer = () => {
+    if (freehandBuffer.current.length === 0 || !currentFreehandId.current)
+      return;
+
+    // Convert to Int16Array (2 bytes per value)
+    const buffer = new ArrayBuffer(freehandBuffer.current.length * 2);
+    const view = new Int16Array(buffer);
+
+    freehandBuffer.current.forEach((val, index) => {
+      view[index] = val;
+    });
+
+    // Send binary data
+    if (socketRef.current) {
+      socketRef.current.emit("freehand-points-binary", {
+        boardId,
+        shapeId: currentFreehandId.current,
+        data: buffer, // Binary data
+      });
+    }
+
+    freehandBuffer.current = [];
+  };
+
   const startFreehandDraw = (x, y) => {
     saveHistory();
     const id = crypto.randomUUID();
     currentFreehandId.current = id;
-
+    isDrawingRef.current = true;
+    lastSentPoint.current = { x, y };
     setShapes((prev) => [
       ...prev,
       {
@@ -711,6 +860,15 @@ export function useBoard() {
       },
     ]);
     setIsDrawing(true);
+    if (socketRef.current) {
+      socketRef.current.emit("freehand-start", {
+        boardId,
+        shapeId: id,
+        point: { x, y },
+        stroke: pencilColor,
+        strokeWidth: pencilStrokeWidth,
+      });
+    }
   };
 
   const continueFreehandDraw = (x, y) => {
@@ -723,11 +881,42 @@ export function useBoard() {
           : s,
       ),
     );
+    // Buffer points with delta encoding
+    const lastPoint = lastSentPoint.current;
+    const dx = Math.round(x - lastPoint.x);
+    const dy = Math.round(y - lastPoint.y);
+
+    // Only buffer if movement is significant
+    if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+      freehandBuffer.current.push(dx, dy);
+      lastSentPoint.current = { x, y };
+    }
+
+    // Send every 50ms
+    if (!freehandThrottleRef.current && freehandBuffer.current.length > 0) {
+      freehandThrottleRef.current = setTimeout(() => {
+        sendFreehandBuffer();
+        freehandThrottleRef.current = null;
+      }, 50);
+    }
   };
 
   const endFreehandDraw = () => {
+    if (freehandBuffer.current.length > 0) {
+      sendFreehandBuffer(true);
+    }
+
+    // Cleanup
+    freehandBuffer.current = [];
+    isDrawingRef.current = false;
     setIsDrawing(false);
     currentFreehandId.current = null;
+    lastSentPoint.current = null;
+
+    if (freehandThrottleRef.current) {
+      clearTimeout(freehandThrottleRef.current);
+      freehandThrottleRef.current = null;
+    }
   };
 
   return {
@@ -790,5 +979,8 @@ export function useBoard() {
     socketRef,
     addLabel,
     updateColorEmiter,
+    selectedArrowId,
+    setSelectedArrowId,
+    deleteArrow,
   };
 }

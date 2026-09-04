@@ -26,6 +26,8 @@ export default function StageCanvas({
   continueFreehandDraw,
   endFreehandDraw,
   handleTextDblClick,
+  selectedArrowId,
+  setSelectedArrowId,
 }) {
   return (
     <Stage
@@ -67,8 +69,10 @@ export default function StageCanvas({
           startFreehandDraw(canvasPos.x, canvasPos.y);
           return;
         }
-
-        if (e.target === e.target.getStage()) setSelectedId(null);
+        if (e.target === e.target.getStage()) {
+          setSelectedId(null);
+          setSelectedArrowId(null);
+        }
       }}
       onMouseMove={(e) => {
         if (tool === "freehand" && isDrawing) {
@@ -97,9 +101,15 @@ export default function StageCanvas({
           <Arrow
             key={arrow.id}
             points={arrow.points}
-            stroke={arrow.stroke || "#000000"}
-            fill={arrow.fill || "#000000"}
-            strokeWidth={2}
+            stroke={
+              selectedArrowId === arrow.id
+                ? "#3b82f6"
+                : arrow.stroke || "#000000"
+            } // ← selected-hone-pe-highlight
+            fill={arrow.stroke || "#000000"}
+            strokeWidth={selectedArrowId === arrow.id ? 3 : 2} // ← selected-hone-pe-mota
+            hitStrokeWidth={20} // ← click-area-badhao (freehand-jaisa)
+            onClick={() =>{ setSelectedArrowId(arrow.id);setSelectedId(null)}} // ← naya
           />
         ))}
         {shapes.map((el) => {

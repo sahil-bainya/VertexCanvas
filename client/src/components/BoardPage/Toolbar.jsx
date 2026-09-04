@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   BrushCleaning,
   Eraser,
+  MousePointer2,
 } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
 import "./Toolbar.css";
@@ -42,6 +43,7 @@ export default function Toolbar({
   stageSize,
   connectingFrom,
   setSelectedId,
+  setSelectedArrowId,
 }) {
   const navigate = useNavigate();
   const theme = useSelector((state) => state.theme.mode);
@@ -78,6 +80,21 @@ export default function Toolbar({
         )}
       </div>
       <ul className="menu menu-horizontal bg-base-300 rounded-box mt-6 flex gap-3 p-1! border border-primary/40">
+        <li>
+          <div className="tooltip" data-tip="Selection">
+            <button
+              onClick={() => {
+                setSelectedId(null);
+                setSelectedArrowId(null);
+                setPendingShapeType(null);
+                setTool("select");
+              }}
+              className="p-2!"
+            >
+              <MousePointer2 size={18} />
+            </button>
+          </div>
+        </li>
         {Object.entries(SHAPE_CONFIG)
           .filter(([type]) => type !== "freehand")
           .map(([type, config]) => (
@@ -120,6 +137,7 @@ export default function Toolbar({
             </button>
           </div>
         </li>
+
         <li>
           <div className="tooltip" data-tip="Eraser">
             <button

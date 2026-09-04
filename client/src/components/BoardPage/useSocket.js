@@ -10,10 +10,12 @@ export function useSocket(
   onArrowConnected,
   onUpdateLabel,
   onColorUpdated,
+  onArrowDeleted,
+  onFreehandStart,
+  onFreehandPoints,
 ) {
   const socketRef = useRef(null);
   useEffect(() => {
-    // connection-banao
     socketRef.current = io("http://localhost:3000", {
       withCredentials: true, // cookie-bhi-bhejni-hai, JWT-ke-liye (auth-baad-mein-add-karenge)
     });
@@ -23,7 +25,6 @@ export function useSocket(
     });
 
     socketRef.current.emit("join-board", boardId);
-    // cleanup — component-unmount-hone-pe-disconnect-karo
 
     socketRef.current.on("shape-moved", ({ shapeId, x, y, rotation }) => {
       onShapeMoved({ shapeId, x, y, rotation });
@@ -49,6 +50,18 @@ export function useSocket(
     });
     socketRef.current.on("color-updated", ({ shapeId, key, value }) => {
       onColorUpdated({ shapeId, key, value });
+    });
+
+    socketRef.current.on("arrow-deleted", ({ arrowId }) => {
+      onArrowDeleted(arrowId);
+    });
+
+    socketRef.current.on("freehand-start", (data) => {
+      onFreehandStart(data);
+    });
+
+    socketRef.current.on("freehand-points-binary", (data) => {
+      onFreehandPoints(data);
     });
 
     return () => {

@@ -46,7 +46,8 @@ export default function Board() {
     updateArrowPoints,
     connectShapes,
     removeArrowsForShape,
-    undo,updateColorEmiter,
+    undo,
+    updateColorEmiter,
     redo,
     zoomIn,
     zoomOut,
@@ -66,7 +67,13 @@ export default function Board() {
     pencilColor,
     setPencilColor,
     pencilStrokeWidth,
-    setPencilStrokeWidth,fullScreen, setFullScreen,addLabel
+    deleteArrow,
+    setPencilStrokeWidth,
+    fullScreen,
+    setFullScreen,
+    addLabel,
+    selectedArrowId,
+    setSelectedArrowId,
   } = useBoard();
 
   const [loading, setLoading] = useState(false); // for cleanup
@@ -146,6 +153,7 @@ export default function Board() {
       }
     } else {
       setSelectedId(id);
+      setSelectedArrowId(null);
     }
   };
 
@@ -157,14 +165,26 @@ export default function Board() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
+      if (e.key === "Delete" || e.key === "Backspace") {
         if (document.activeElement.tagName === "TEXTAREA") return;
-        deleteSelected(selectedId, removeArrowsForShape);
+
+        if (selectedId) {
+          deleteSelected(selectedId, removeArrowsForShape);
+        } else if (selectedArrowId) {
+          // ← NAYA-condition
+          deleteArrow(selectedArrowId);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedId, deleteSelected, removeArrowsForShape]);
+  }, [
+    selectedId,
+    selectedArrowId,
+    deleteSelected,
+    removeArrowsForShape,
+    deleteArrow,
+  ]);
 
   useEffect(() => {
     const handleKeydown = (e) => {
@@ -188,47 +208,49 @@ export default function Board() {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
       {/* TOP BAR — canvas ke upar, apni height occupy kare */}
-      {!fullScreen && <div ref={toolbarRef} className="shrink-0 z-50">
-        <Toolbar
-          loading={loading}
-          handleAssist={handleAssist}
-          handleCleanup={handleCleanup}
-          notesShowing={notesShowing}
-          setNotesShowing={setNotesShowing}
-          boardName={boardName}
-          setBoardName={setBoardName}
-          tool={tool}
-          saveBoard={saveBoard}
-          setTool={setTool}
-          arrows={arrows}
-          addShape={addShape}
-          saveTitle={saveTitle}
-          isEditingTitle={isEditingTitle}
-          setIsEditingTitle={setIsEditingTitle}
-          undo={undo}
-          redo={redo}
-          zoomIn={zoomIn}
-          zoomOut={zoomOut}
-          resetZoom={resetZoom}
-          selectedId={selectedId}
-          shapes={shapes}
-          setShapes={setShapes}
-          saveHistory={saveHistory}
-          exportPNG={exportPNG}
-          exportPDF={exportPDF}
-          grid={grid}
-          setGrid={setGrid}
-          setArrows={setArrows}
-          shapeRefs={shapeRefs}
-          pendingShapeType={pendingShapeType}
-          setPendingShapeType={setPendingShapeType}
-          stageRef={stageRef}
-          stageSize={stageSize}
-          connectingFrom={connectingFrom}
-          setSelectedId={setSelectedId}
-        />
-      </div>}
-      
+      {!fullScreen && (
+        <div ref={toolbarRef} className="shrink-0 z-50">
+          <Toolbar
+            loading={loading}
+            handleAssist={handleAssist}
+            handleCleanup={handleCleanup}
+            notesShowing={notesShowing}
+            setNotesShowing={setNotesShowing}
+            boardName={boardName}
+            setBoardName={setBoardName}
+            tool={tool}
+            saveBoard={saveBoard}
+            setTool={setTool}
+            arrows={arrows}
+            addShape={addShape}
+            saveTitle={saveTitle}
+            isEditingTitle={isEditingTitle}
+            setIsEditingTitle={setIsEditingTitle}
+            undo={undo}
+            redo={redo}
+            zoomIn={zoomIn}
+            zoomOut={zoomOut}
+            resetZoom={resetZoom}
+            selectedId={selectedId}
+            shapes={shapes}
+            setShapes={setShapes}
+            saveHistory={saveHistory}
+            exportPNG={exportPNG}
+            exportPDF={exportPDF}
+            grid={grid}
+            setGrid={setGrid}
+            setArrows={setArrows}
+            shapeRefs={shapeRefs}
+            pendingShapeType={pendingShapeType}
+            setPendingShapeType={setPendingShapeType}
+            stageRef={stageRef}
+            stageSize={stageSize}
+            connectingFrom={connectingFrom}
+            setSelectedId={setSelectedId}
+            setSelectedArrowId={setSelectedArrowId}
+          />
+        </div>
+      )}
 
       {/* CANVAS AREA — baaki poori height */}
       <div className="relative flex-1 overflow-hidden">
@@ -268,6 +290,8 @@ export default function Board() {
             startFreehandDraw={startFreehandDraw}
             continueFreehandDraw={continueFreehandDraw}
             endFreehandDraw={endFreehandDraw}
+            selectedArrowId={selectedArrowId}
+            setSelectedArrowId={setSelectedArrowId}
           />
         </div>
 
@@ -361,7 +385,7 @@ export default function Board() {
       </div>
 
       {/* Notes Page — right side slide-in */}
-      { notesShowing && (
+      {notesShowing && (
         <div className="absolute right-0 top-0 h-full z-50 shadow-xl border-l border-base-300 w-[clamp(260px,25vw,380px)] overflow-hidden">
           <NotesPage
             boardNotes={boardNotes}

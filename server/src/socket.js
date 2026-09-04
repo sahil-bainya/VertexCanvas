@@ -54,6 +54,18 @@ export const initSocket = (httpServer) => {
       socket.to(boardId).emit("color-updated", { shapeId, key, value });
     });
 
+    socket.on("arrow-deleted", ({ boardId, arrowId }) => {
+      socket.to(boardId).emit("arrow-deleted", { arrowId });
+    });
+
+    socket.on("freehand-start", (data) => {
+      socket.to(data.boardId).emit("freehand-start", data);
+    });
+
+    socket.on("freehand-points-binary", (data) => {
+      socket.to(data.boardId).emit("freehand-points-binary", data);
+    });
+
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
     });
