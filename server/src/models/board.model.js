@@ -33,6 +33,19 @@ const boardSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    pendingRequests: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        requestedAt: { type: Date, default: Date.now },
+      },
+    ],
+    collaborators: [
+      {
+        // ← list of approved users to collab
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );

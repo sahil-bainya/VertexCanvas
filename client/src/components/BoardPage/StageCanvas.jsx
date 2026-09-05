@@ -1,7 +1,30 @@
-import { Stage, Layer, Transformer, Arrow, Text } from "react-konva";
+import { Stage, Layer, Transformer, Arrow, Text, Group } from "react-konva";
+import { Image as KonvaImage } from "react-konva";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getTextPosition } from "./canvasHelper.js";
 import "./BoardStyle.css";
+import useImage from "use-image";
+
+// Helper function - user ID se consistent color generate karo
+const getUserColor = (userId) => {
+  const colors = [
+    "#4A90E2", // Blue
+    "#E24A4A", // Red
+    "#4AE24A", // Green
+    "#E2A64A", // Orange
+    "#9B4AE2", // Purple
+    "#E24A9B", // Pink
+    "#4AE2D0", // Teal
+    "#E2D04A", // Yellow
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return colors[Math.abs(hash) % colors.length];
+};
 
 export default function StageCanvas({
   stageRef,
@@ -28,7 +51,11 @@ export default function StageCanvas({
   handleTextDblClick,
   selectedArrowId,
   setSelectedArrowId,
+  remoteCursors,
+  onMouseMove,
 }) {
+  const [cursorImage] = useImage("https://img.icons8.com/color/48/cursor.png");
+
   return (
     <Stage
       id={grid ? "Canvas" : undefined}
@@ -75,6 +102,7 @@ export default function StageCanvas({
         }
       }}
       onMouseMove={(e) => {
+        onMouseMove(e);
         if (tool === "freehand" && isDrawing) {
           const stage = e.target.getStage();
           const pointerPos = stage.getPointerPosition();
@@ -109,7 +137,10 @@ export default function StageCanvas({
             fill={arrow.stroke || "#000000"}
             strokeWidth={selectedArrowId === arrow.id ? 3 : 2} // ← selected-hone-pe-mota
             hitStrokeWidth={20} // ← click-area-badhao (freehand-jaisa)
-            onClick={() =>{ setSelectedArrowId(arrow.id);setSelectedId(null)}} // ← naya
+            onClick={() => {
+              setSelectedArrowId(arrow.id);
+              setSelectedId(null);
+            }} // ← naya
           />
         ))}
         {shapes.map((el) => {
@@ -164,6 +195,34 @@ export default function StageCanvas({
                 />
               )}
             </>
+          );
+        })}
+        {Object.entries(remoteCursors).map(([userId, cursor]) => {
+          const cursorColor = getUserColor(userId);
+          return (
+            <Group key={userId} x={cursor.x} y={cursor.y}>
+              {/* Cursor arrow - proper SVG-like shape */}
+              <KonvaImage
+                image={cursorImage}
+                width={30}
+                height={30}
+                offsetX={11}
+                offsetY={7}
+              />
+
+              {/* Username label with background */}
+              <Text
+                x={12}
+                y={16}
+                text={cursor.username || userId.slice(0, 6)}
+                fontSize={11}
+                fontFamily="Arial"
+                fill={cursorColor}
+                padding={0}
+                backgroundColor={cursorColor}
+                cornerRadius={4}
+              />
+            </Group>
           );
         })}
         <Transformer

@@ -6,11 +6,12 @@ import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getShapeCenter, getShapeEdgePoint } from "./canvasHelper.js";
 import { useSelector } from "react-redux";
 import { useSocket } from "./useSocket.js";
-
+import { notify } from "../../utils/toast.jsx";
 export function useBoard() {
   const { id } = useParams();
   const boardId = id;
   const theme = useSelector((state) => state.theme.mode);
+  const user = useSelector((state) => state.auth.user);
 
   const getDefaultStrokeColor = () =>
     theme === "dark" || theme === "luxury" || theme === "sunset"
@@ -264,7 +265,7 @@ export function useBoard() {
         strokeWidth,
         lineCap: "round",
         lineJoin: "round",
-        isDefaultColor: true,
+        isDefaultColor: false,
         context: { notes: [], links: [], code: "" },
       },
     ]);
@@ -295,6 +296,42 @@ export function useBoard() {
     );
   };
 
+  // Add state for remote cursors
+  const [remoteCursors, setRemoteCursors] = useState({});
+
+  // Handle remote cursor move
+  const handleRemoteCursorMove = ({ cursorData, userId, name }) => {
+    // Decode binary data
+    const view = new Int16Array(cursorData);
+    const x = view[0];
+    const y = view[1];
+
+    setRemoteCursors((prev) => ({
+      ...prev,
+      [userId]: { x, y, lastUpdate: Date.now(), username: name },
+    }));
+
+    // Auto cleanup after 3 seconds of no updates
+    setTimeout(() => {
+      setRemoteCursors((prev) => {
+        const updated = { ...prev };
+        if (updated[userId] && Date.now() - updated[userId].lastUpdate > 3000) {
+          delete updated[userId];
+        }
+        return updated;
+      });
+    }, 3000);
+  };
+
+  // Handle user disconnect - remove cursor
+  const handleRemoteUserLeft = ({ userId }) => {
+    setRemoteCursors((prev) => {
+      const updated = { ...prev };
+      delete updated[userId];
+      return updated;
+    });
+  };
+
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
@@ -307,6 +344,8 @@ export function useBoard() {
     handleRemoteArrowDeleted,
     handleRemoteFreehandStart,
     handleRemoteFreehandPoints,
+    handleRemoteCursorMove,
+    handleRemoteUserLeft,
   );
 
   useEffect(() => {
@@ -748,14 +787,26 @@ export function useBoard() {
       socketRef.current.emit("arrow-deleted", { boardId, arrowId });
     }
   };
+
+  const [boardAccess, setBoardAccess] = useState({
+    isOwner: false,
+    isCollaborator: false,
+    hasPendingRequest: false,
+  });
+
   useEffect(() => {
     (async () => {
       const res = await api.get(`/boards/${id}`);
-      setShapes(res.data.data.board.canvasData || []);
-      setBoardName(res.data.data.board.title);
-      setArrows(res.data.data.board.arrows);
-      setBoardNotes(res.data.data.board.boardNotes || []);
-      console.log(res.data.data.board.boardNotes);
+      const { board, access } = res.data.data;
+
+      setBoardAccess(access);
+
+      if (access.isOwner || access.isCollaborator) {
+        setShapes(board.canvasData || []);
+        setBoardName(board.title);
+        setArrows(board.arrows || []);
+        setBoardNotes(board.boardNotes || []);
+      }
     })();
   }, [id]);
 
@@ -919,8 +970,87 @@ export function useBoard() {
     }
   };
 
+  // Add these refs at top
+  const cursorBuffer = useRef({});
+  const cursorThrottleRef = useRef(null);
+  const cursorUpdateInterval = useRef(null);
+
+  // Send cursor buffer
+  const sendCursorBuffer = () => {
+    if (!cursorBuffer.current.x && !cursorBuffer.current.y) return;
+
+    const { x, y } = cursorBuffer.current;
+
+    // Encode as Int16 (2 bytes each, total 4 bytes)
+    const buffer = new ArrayBuffer(4);
+    const view = new Int16Array(buffer);
+    view[0] = Math.round(x);
+    view[1] = Math.round(y);
+
+    if (socketRef.current) {
+      socketRef.current.emit("cursor-move-binary", {
+        boardId,
+        cursorData: buffer,
+        userId: socketRef.current.id, // or your user ID
+        name: user.name,
+      });
+    }
+
+    // Clear buffer after sending
+    cursorBuffer.current = {};
+  };
+
+  // Start cursor tracking
+  const startCursorTracking = () => {
+    cursorUpdateInterval.current = setInterval(() => {
+      sendCursorBuffer();
+    }, 50); // 20 updates per second
+  };
+
+  // Update cursor position (call from mouse move handler)
+  const updateCursorPosition = (x, y) => {
+    // Store latest position
+    cursorBuffer.current = { x, y };
+
+    // Throttle sending
+    if (!cursorThrottleRef.current) {
+      cursorThrottleRef.current = setTimeout(() => {
+        sendCursorBuffer();
+        cursorThrottleRef.current = null;
+      }, 50);
+    }
+  };
+
+  // Stop cursor tracking
+  const stopCursorTracking = () => {
+    if (cursorUpdateInterval.current) {
+      clearInterval(cursorUpdateInterval.current);
+    }
+    if (cursorThrottleRef.current) {
+      clearTimeout(cursorThrottleRef.current);
+    }
+    cursorBuffer.current = {};
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCursorTracking();
+      // Cleanup remote cursors
+      setRemoteCursors({});
+    };
+  }, []);
+
+  const inviteUser = () => {
+    const inviteLink = `${window.location.origin}/board/${boardId}`;
+    navigator.clipboard.writeText(inviteLink);
+    notify.success("Link copied!");
+  };
   return {
     pencilColor,
+    remoteCursors,
+    startCursorTracking,
+    updateCursorPosition,
+    stopCursorTracking,
     setPencilColor,
     pencilStrokeWidth,
     setPencilStrokeWidth,
@@ -982,5 +1112,8 @@ export function useBoard() {
     selectedArrowId,
     setSelectedArrowId,
     deleteArrow,
+    inviteUser,
+    boardId,
+    boardAccess,
   };
 }

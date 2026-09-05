@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Button } from "../";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import {
@@ -14,9 +16,7 @@ import {
 } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
 import "./Toolbar.css";
-import { useNavigate } from "react-router-dom";
 import { ToggleTheme } from "../";
-import { useSelector } from "react-redux";
 export default function Toolbar({
   loading,
   handleAssist,
@@ -44,6 +44,7 @@ export default function Toolbar({
   connectingFrom,
   setSelectedId,
   setSelectedArrowId,
+  setShowCollabModal,
 }) {
   const navigate = useNavigate();
   const theme = useSelector((state) => state.theme.mode);
@@ -262,6 +263,14 @@ export default function Toolbar({
             }}
           >
             <BrushCleaning size={18} />
+          </button>
+        </div>
+        <div className="tooltip tooltip-bottom" data-tip="">
+          <button
+            onClick={() => setShowCollabModal(true)}
+            className="collab-btn"
+          >
+            Collab
           </button>
         </div>
         <div className="tooltip tooltip-bottom" data-tip="Change theme">

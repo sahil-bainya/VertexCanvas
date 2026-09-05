@@ -12,10 +12,12 @@ import CanvasControls from "./CanvasControls.jsx";
 import SelectionControls from "./SelectionControls..jsx";
 import { notify } from "../../utils/toast.jsx";
 import { Maximize, Minimize } from "lucide-react";
-
+import CollabModal from "./CollabModel.jsx";
+import RequestAccessScreen from "./RequestAccessScreen.jsx";
 export default function Board() {
   const {
     shapes,
+    boardId,
     setShapes,
     addToNotes,
     boardNotes,
@@ -74,8 +76,12 @@ export default function Board() {
     addLabel,
     selectedArrowId,
     setSelectedArrowId,
+    remoteCursors,
+    startCursorTracking,
+    updateCursorPosition,
+    stopCursorTracking,boardAccess 
   } = useBoard();
-
+  
   const [loading, setLoading] = useState(false); // for cleanup
   const [pendingCleanup, setPendingCleanup] = useState(false);
   const [notesShowing, setNotesShowing] = useState(false);
@@ -158,6 +164,39 @@ export default function Board() {
   };
 
   useEffect(() => {
+    startCursorTracking();
+
+    // Cleanup on unmount
+    return () => {
+      stopCursorTracking();
+    };
+  }, []);
+
+  // Mouse move handler
+  const handleMouseMove = (e) => {
+    const stage = e.target.getStage();
+
+    const pointerPos = stage.getPointerPosition();
+    const transform = stage.getAbsoluteTransform().copy().invert();
+    const canvasPos = transform.point(pointerPos);
+
+    if (canvasPos) {
+      updateCursorPosition(canvasPos.x, canvasPos.y);
+    }
+  };
+
+  // Mouse leave - cursor hide karo
+  const handleMouseLeave = () => {
+    // Optional: Cursor hide karne ke liye
+    stopCursorTracking();
+  };
+
+  // Mouse enter - cursor tracking restart
+  const handleMouseEnter = () => {
+    startCursorTracking();
+  };
+
+  useEffect(() => {
     if (!pendingCleanup) return;
     shapes.forEach((shape) => updateArrowPoints(shape.id));
     setTimeout(() => setPendingCleanup(false), 0);
@@ -205,6 +244,12 @@ export default function Board() {
     });
   }, [stageSize, stageRef]);
 
+  const [showCollabModal, setShowCollabModal] = useState(false);
+
+ if (!boardAccess.isOwner && !boardAccess.isCollaborator) {
+  return <RequestAccessScreen boardId={boardId} hasPendingRequest={boardAccess.hasPendingRequest} />;
+} 
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
       {/* TOP BAR — canvas ke upar, apni height occupy kare */}
@@ -248,6 +293,7 @@ export default function Board() {
             connectingFrom={connectingFrom}
             setSelectedId={setSelectedId}
             setSelectedArrowId={setSelectedArrowId}
+            setShowCollabModal={setShowCollabModal}
           />
         </div>
       )}
@@ -292,8 +338,19 @@ export default function Board() {
             endFreehandDraw={endFreehandDraw}
             selectedArrowId={selectedArrowId}
             setSelectedArrowId={setSelectedArrowId}
+            remoteCursors={remoteCursors}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onMouseEnter={handleMouseEnter}
           />
         </div>
+
+        {showCollabModal && (
+          <CollabModal
+            boardId={boardId}
+            onClose={() => setShowCollabModal(false)}
+          />
+        )}
 
         {/* AI Suggestion Panel — mid left, canvas ke andar */}
         {!fullScreen && aiPanelOpen && (

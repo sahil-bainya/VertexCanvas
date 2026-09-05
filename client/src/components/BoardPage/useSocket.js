@@ -13,6 +13,8 @@ export function useSocket(
   onArrowDeleted,
   onFreehandStart,
   onFreehandPoints,
+  onCursorMove,
+  onUserLeft,
 ) {
   const socketRef = useRef(null);
   useEffect(() => {
@@ -62,6 +64,12 @@ export function useSocket(
 
     socketRef.current.on("freehand-points-binary", (data) => {
       onFreehandPoints(data);
+    });
+    socketRef.current.on("cursor-move-binary", (data) => {
+      onCursorMove(data);
+    });
+    socketRef.current.on("user-left", (data) => {
+      onUserLeft(data);
     });
 
     return () => {

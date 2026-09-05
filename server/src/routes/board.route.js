@@ -8,7 +8,8 @@ import {
   deleteBoard,
   updateTitle,
   updateCanvas,
-  updateNotes
+  updateNotes,
+  requestJoin,
 } from "../controllers/board.controller.js";
 const router = Router();
 
@@ -20,4 +21,5 @@ router.route("/:id").patch(updateTitle);
 router.route("/:id").delete(deleteBoard);
 router.route("/:id/canvas").patch(updateCanvas);
 router.route("/:id/notes").patch(updateNotes);
+router.post("/:id/join-request", requestJoin);
 export default router;

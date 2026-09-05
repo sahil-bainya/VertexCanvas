@@ -13,6 +13,7 @@ export const initSocket = (httpServer) => {
 
     socket.on("join-board", (boardId) => {
       socket.join(boardId);
+
       console.log(`Socket ${socket.id} joined board ${boardId}`);
     });
 
@@ -66,8 +67,23 @@ export const initSocket = (httpServer) => {
       socket.to(data.boardId).emit("freehand-points-binary", data);
     });
 
+    socket.on("cursor-move-binary", (data) => {
+      socket.to(data.boardId).emit("cursor-move-binary", {
+        cursorData: data.cursorData,
+        userId: socket.id,
+        name: data.name,
+      });
+    });
+
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      // Notify others in room
+      socket.rooms.forEach((room) => {
+        if (room !== socket.id) {
+          socket.to(room).emit("user-left", {
+            userId: socket.id,
+          });
+        }
+      });
     });
   });
 };
