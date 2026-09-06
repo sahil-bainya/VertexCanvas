@@ -22,25 +22,25 @@ export default function CollabModal({ boardId, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-base-100 rounded-xl p-6 w-[90vw] max-w-md shadow-xl"
+        className="bg-base-100 rounded-xl p-4! w-[90vw] max-w-md shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold mb-2">Collaborate</h3>
-        <p className="mb-3">Share this link to invite others:</p>
+        <h3 className="text-lg font-semibold mb-2!">Collaborate</h3>
+        <p className="mb-3!">Share this link to invite others:</p>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-1 ">
           <input
             type="text"
             value={inviteLink}
             readOnly
-            className="invite-link-input input input-bordered flex-1"
+            className="invite-link-input input input-bordered flex-1 p-2!"
           />
-          <button onClick={handleCopy} className="btn btn-primary">
+          <button onClick={handleCopy} className="btn btn-primary px-2! rounded-xl">
             {copied ? "Copied!" : "Copy Link"}
           </button>
         </div>
 
-        <button onClick={onClose} className="btn btn-ghost">
+        <button onClick={onClose} className="btn btn-ghost mt-2! px-2! rounded-xl">
           Close
         </button>
       </div>

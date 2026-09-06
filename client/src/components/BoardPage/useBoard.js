@@ -54,7 +54,6 @@ export function useBoard() {
   };
 
   const removeArrowsForShape = (id) => {
-    saveHistory();
     setArrows((prev) => prev.filter((a) => a.from !== id && a.to !== id));
   };
   const updateColorEmiter = (shapeId, key, value) => {
@@ -95,8 +94,6 @@ export function useBoard() {
   };
   // Helper function to update arrows after shape update
   const updateArrowsAfterShapeUpdate = (updatedShapeId, updatedShapes) => {
-    console.log("Updating arrows after shape update:", updatedShapeId);
-
     setArrows((prevArrows) => {
       return prevArrows.map((arrow) => {
         // Only update arrows connected to this shape
@@ -157,7 +154,6 @@ export function useBoard() {
 
   const handleRemoteShapeAdded = ({ shapeId, x, y, type }) => {
     const color = getDefaultStrokeColor();
-    saveHistory();
     setShapes((prev) => [
       // <line 68
       ...prev,
@@ -176,8 +172,6 @@ export function useBoard() {
   };
 
   const handleRemoteShapeDeleted = (shapeId) => {
-    console.log(`handle remote shape deleted ${shapeId}`);
-    saveHistory();
     setShapes((prev) => prev.filter((s) => s.id !== shapeId));
     removeArrowsForShape(shapeId);
   };
@@ -226,8 +220,6 @@ export function useBoard() {
   };
 
   const handleRemoteLabelUpdated = ({ shapeId, updatedText }) => {
-    saveHistory();
-    console.log(`${shapeId} text ${updatedText}`);
     setShapes((prevShapes) =>
       prevShapes.map((s) =>
         s.id === shapeId ? { ...s, text: updatedText } : s,
@@ -236,14 +228,12 @@ export function useBoard() {
   };
 
   const handleRemoteColorUpdated = ({ shapeId, key, value }) => {
-    saveHistory();
     setShapes((prev) =>
       prev.map((s) => (s.id === shapeId ? { ...s, [key]: value } : s)),
     );
   };
 
   const handleRemoteArrowDeleted = (arrowId) => {
-    saveHistory();
     setArrows((prev) => prev.filter((a) => a.id !== arrowId));
   };
 
@@ -332,6 +322,10 @@ export function useBoard() {
     });
   };
 
+  const handleRemoteCleanCanvas = () => {
+    setArrows([]);
+    setShapes([]);
+  };
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
@@ -346,6 +340,7 @@ export function useBoard() {
     handleRemoteFreehandPoints,
     handleRemoteCursorMove,
     handleRemoteUserLeft,
+    handleRemoteCleanCanvas,
   );
 
   useEffect(() => {
@@ -788,11 +783,7 @@ export function useBoard() {
     }
   };
 
-  const [boardAccess, setBoardAccess] = useState({
-    isOwner: false,
-    isCollaborator: false,
-    hasPendingRequest: false,
-  });
+  const [boardAccess, setBoardAccess] = useState(null); // null = loading
 
   useEffect(() => {
     (async () => {
@@ -970,6 +961,14 @@ export function useBoard() {
     }
   };
 
+  const eraseWholeCanvas = () => {
+    saveHistory();
+    setArrows([]);
+    setShapes([]);
+    if (socketRef.current) {
+      socketRef.current.emit("canvas-cleaned", { boardId });
+    }
+  };
   // Add these refs at top
   const cursorBuffer = useRef({});
   const cursorThrottleRef = useRef(null);
@@ -1115,5 +1114,6 @@ export function useBoard() {
     inviteUser,
     boardId,
     boardAccess,
+    eraseWholeCanvas,
   };
 }

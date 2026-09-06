@@ -10,7 +10,6 @@ import {
 } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import { getBoardAccess } from "../utils/checkOwnership.js";
-
 const createBoard = asyncHandler(async (req, res) => {
   const { title } = req.body;
   const owner = req.user._id;
@@ -171,34 +170,106 @@ const updateNotes = asyncHandler(async (req, res) => {
 const requestJoin = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
-  
+
   const board = await Board.findById(id);
   if (!board) {
     throw new ApiError(404, "Board not found");
   }
-  
+
   // Check if already requested
-  const alreadyRequested = board.pendingRequests?.some(
-    (req) => req.userId.equals(userId)
+  const alreadyRequested = board.pendingRequests?.some((req) =>
+    req.userId.equals(userId),
   );
-  
+
   if (alreadyRequested) {
     throw new ApiError(400, "Request already sent");
   }
-  
+
   // Check if already collaborator or owner
   const access = getBoardAccess(board, userId);
   if (access.isOwner || access.isCollaborator) {
     throw new ApiError(400, "Already have access");
   }
-  
+
   // Add to pending requests
   board.pendingRequests.push({ userId });
   await board.save();
-  
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Join request sent"));
+  // ===== REAL-TIME NOTIFICATION =====
+  const io = req.app.get("io");
+  io.to(`user-${board.owner}`).emit("access-requested", {
+    boardId: id,
+    requesterId: userId,
+    requesterName: req.user.name,
+    requesterEmail: req.user.email,
+  });
+  // ==================================
+  return res.status(200).json(new ApiResponse(200, {}, "Join request sent"));
+});
+
+const acceptRequest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  const board = await Board.findById(id);
+  if (!board) throw new ApiError(404, "Board not found");
+
+  const access = getBoardAccess(board, req.user._id);
+  if (!access.isOwner) {
+    throw new ApiError(403, "Only owner can accept requests");
+  }
+
+  // Pending request se remove karo
+  board.pendingRequests = board.pendingRequests.filter(
+    (req) => !req.userId.equals(userId),
+  );
+
+  // Collaborator add karo (agar already nahi hai)
+  const alreadyCollaborator = board.collaborators?.some((collabId) =>
+    collabId.equals(userId),
+  );
+
+  if (!alreadyCollaborator) {
+    board.collaborators.push(userId);
+  }
+
+  await board.save();
+
+  // User ko notify karo (agar online hai)
+  console.log("IO instance:", io);
+  const io = req.app.get("io");
+  io.to(`user-${userId}`).emit("request-approved", {
+    boardId: id,
+  });
+
+  return res.status(200).json(new ApiResponse(200, {}, "Request accepted"));
+});
+
+const rejectRequest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  const board = await Board.findById(id);
+  if (!board) throw new ApiError(404, "Board not found");
+
+  const access = getBoardAccess(board, req.user._id);
+  if (!access.isOwner) {
+    throw new ApiError(403, "Only owner can reject requests");
+  }
+
+  // Pending request se remove karo
+  board.pendingRequests = board.pendingRequests.filter(
+    (req) => !req.userId.equals(userId),
+  );
+
+  await board.save();
+
+  // User ko notify karo
+  const io = req.app.get("io");
+  io.to(`user-${userId}`).emit("request-rejected", {
+    boardId: id,
+  });
+
+  return res.status(200).json(new ApiResponse(200, {}, "Request rejected"));
 });
 
 export {
@@ -210,4 +281,6 @@ export {
   updateCanvas,
   updateNotes,
   requestJoin,
+  acceptRequest,
+  rejectRequest,
 };

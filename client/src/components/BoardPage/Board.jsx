@@ -14,8 +14,11 @@ import { notify } from "../../utils/toast.jsx";
 import { Maximize, Minimize } from "lucide-react";
 import CollabModal from "./CollabModel.jsx";
 import RequestAccessScreen from "./RequestAccessScreen.jsx";
+import { useParams } from "react-router-dom";
+import RequestNotification from "./RequestNotification.jsx";
 export default function Board() {
   const {
+    eraseWholeCanvas,
     shapes,
     boardId,
     setShapes,
@@ -79,9 +82,10 @@ export default function Board() {
     remoteCursors,
     startCursorTracking,
     updateCursorPosition,
-    stopCursorTracking,boardAccess 
+    stopCursorTracking,
+    boardAccess,
   } = useBoard();
-  
+
   const [loading, setLoading] = useState(false); // for cleanup
   const [pendingCleanup, setPendingCleanup] = useState(false);
   const [notesShowing, setNotesShowing] = useState(false);
@@ -92,6 +96,32 @@ export default function Board() {
   const [aiLoading, setAiLoading] = useState(false);
 
   const [grid, setGrid] = useState(false);
+
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const { id } = useParams();
+  useEffect(() => {
+    const handleAccessRequest = (event) => {
+      const { requesterId, requesterName, boardId } = event.detail;
+
+      // Sirf current board ke liye
+      if (boardId === id) {
+        setPendingRequests((prev) => [
+          ...prev,
+          {
+            userId: requesterId,
+            userName: requesterName,
+            boardId: boardId,
+          },
+        ]);
+
+        notify.info(`${requesterName} wants to join your board`);
+      }
+    };
+
+    window.addEventListener("access-request", handleAccessRequest);
+    return () =>
+      window.removeEventListener("access-request", handleAccessRequest);
+  }, []);
 
   const handleAssist = async () => {
     if (!canvasChangedSinceAI && aiResponse) {
@@ -245,13 +275,39 @@ export default function Board() {
   }, [stageSize, stageRef]);
 
   const [showCollabModal, setShowCollabModal] = useState(false);
-
- if (!boardAccess.isOwner && !boardAccess.isCollaborator) {
-  return <RequestAccessScreen boardId={boardId} hasPendingRequest={boardAccess.hasPendingRequest} />;
-} 
+  if (boardAccess === null) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen">
+        <span className="loading loading-spinner loading-xl"></span>
+      </div>
+    );
+  }
+  if (!boardAccess.isOwner && !boardAccess.isCollaborator) {
+    return (
+      <RequestAccessScreen
+        boardId={boardId}
+        hasPendingRequest={boardAccess.hasPendingRequest}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
+      {pendingRequests.length > 0 && (
+        <div className="fixed top-20 right-4 z-50 space-y-2">
+          {pendingRequests.map((req) => (
+            <RequestNotification
+              key={req.userId}
+              request={req}
+              onHandled={(userId) => {
+                setPendingRequests((prev) =>
+                  prev.filter((r) => r.userId !== userId),
+                );
+              }}
+            />
+          ))}
+        </div>
+      )}
       {/* TOP BAR — canvas ke upar, apni height occupy kare */}
       {!fullScreen && (
         <div ref={toolbarRef} className="shrink-0 z-50">
@@ -294,6 +350,7 @@ export default function Board() {
             setSelectedId={setSelectedId}
             setSelectedArrowId={setSelectedArrowId}
             setShowCollabModal={setShowCollabModal}
+            eraseWholeCanvas={eraseWholeCanvas}
           />
         </div>
       )}

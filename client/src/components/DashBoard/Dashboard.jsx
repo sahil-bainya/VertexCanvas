@@ -11,6 +11,8 @@ import {
   updateBoard,
 } from "../../store/boardSlice.js";
 import { notify } from "../../utils/toast.jsx";
+import { useGlobalSocketContext } from "../../globalSocket/SocketContext.js";
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -18,6 +20,24 @@ export default function Dashboard() {
   const boards = useSelector((state) => state.board.boards);
   const [editingBoardId, setEditingBoardId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
+
+  const socketRef = useGlobalSocketContext();
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const handleAccessRequested = ({ boardId, requesterId, requesterName }) => {
+      // toast/modal-dikhao "X wants to join board Y"
+      notify.info(`${requesterName} requested access`);
+    };
+
+    socketRef.current.on("access-requested", handleAccessRequested);
+
+    return () => {
+      socketRef.current.off("access-requested", handleAccessRequested);
+    };
+  }, [socketRef]);
+
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);

@@ -10,6 +10,8 @@ import {
   updateCanvas,
   updateNotes,
   requestJoin,
+  acceptRequest,
+  rejectRequest,
 } from "../controllers/board.controller.js";
 const router = Router();
 
@@ -22,4 +24,7 @@ router.route("/:id").delete(deleteBoard);
 router.route("/:id/canvas").patch(updateCanvas);
 router.route("/:id/notes").patch(updateNotes);
 router.post("/:id/join-request", requestJoin);
+router.post("/:id/accept-request", acceptRequest);
+router.post("/:id/reject-request", rejectRequest);
+
 export default router;

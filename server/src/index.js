@@ -11,7 +11,7 @@ const PORT = process.env.PORT;
 
 const httpServer = http.createServer(app);
 
-initSocket(httpServer);
+initSocket(httpServer,app);
 
 connectDB()
   .then(() => {

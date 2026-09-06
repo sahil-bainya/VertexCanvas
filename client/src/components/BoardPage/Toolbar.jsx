@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   BrushCleaning,
   Eraser,
+  Link,
   MousePointer2,
 } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
@@ -45,6 +46,7 @@ export default function Toolbar({
   setSelectedId,
   setSelectedArrowId,
   setShowCollabModal,
+  eraseWholeCanvas
 }) {
   const navigate = useNavigate();
   const theme = useSelector((state) => state.theme.mode);
@@ -256,21 +258,18 @@ export default function Toolbar({
         <div className="tooltip tooltip-bottom" data-tip="Erase whole canvas">
           <button
             className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!  ${theme === "dark" && "border border-primary/40"}`}
-            onClick={() => {
-              saveHistory();
-              setArrows([]);
-              setShapes([]);
-            }}
+            onClick={eraseWholeCanvas}
           >
             <BrushCleaning size={18} />
           </button>
         </div>
-        <div className="tooltip tooltip-bottom" data-tip="">
+        <div className="tooltip tooltip-bottom" data-tip="Invite">
           <button
+            className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!  ${theme === "dark" && "border border-primary/40"}`}
             onClick={() => setShowCollabModal(true)}
-            className="collab-btn"
+            
           >
-            Collab
+            <Link size={18}/> Collab
           </button>
         </div>
         <div className="tooltip tooltip-bottom" data-tip="Change theme">

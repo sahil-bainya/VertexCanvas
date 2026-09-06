@@ -12,6 +12,8 @@ import store from "./store/store.js";
 import { AuthLayout } from "./components";
 import { AuthPage, BoardPage, DashboardPage, SettingsPage } from "./pages";
 import { Toaster } from "react-hot-toast";
+import SocketProvider from "./globalSocket/SocketProvider.jsx";
+
 const savedTheme = localStorage.getItem("theme") || "default";
 document.documentElement.setAttribute("data-theme", savedTheme);
 const router = createBrowserRouter([
@@ -53,7 +55,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <Toaster position="top-center" />
-    <RouterProvider router={router} />
+    <SocketProvider>
+      <Toaster position="top-center" />
+      <RouterProvider router={router} />
+    </SocketProvider>
   </Provider>,
 );

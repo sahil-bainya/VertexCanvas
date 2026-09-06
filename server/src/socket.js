@@ -1,15 +1,19 @@
 import { Server } from "socket.io";
-
-export const initSocket = (httpServer) => {
+export const initSocket = (httpServer, app) => {
   const io = new Server(httpServer, {
     cors: {
       origin: "http://localhost:5173",
       credentials: true,
     },
   });
-
+  app.set("io", io);
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
+
+    socket.on("register-user", (userId) => {
+      socket.join(`user-${userId}`); // ← PERSONAL-room, boardId-se-ALAG
+      console.log(`Socket ${socket.id} registering as user-${userId}`);
+    });
 
     socket.on("join-board", (boardId) => {
       socket.join(boardId);
@@ -65,6 +69,10 @@ export const initSocket = (httpServer) => {
 
     socket.on("freehand-points-binary", (data) => {
       socket.to(data.boardId).emit("freehand-points-binary", data);
+    });
+
+    socket.on("canvas-cleaned", ({ boardId }) => {
+      socket.to(boardId).emit("canvas-cleaned");
     });
 
     socket.on("cursor-move-binary", (data) => {

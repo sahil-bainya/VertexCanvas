@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { io } from "socket.io-client";
+import { useEffect } from "react";
+import { useGlobalSocketContext } from "../../globalSocket/SocketContext.js";
 
 export function useSocket(
   boardId,
@@ -15,67 +15,90 @@ export function useSocket(
   onFreehandPoints,
   onCursorMove,
   onUserLeft,
+  onCleanCanvas
 ) {
-  const socketRef = useRef(null);
+  const { socketRef, isConnected } = useGlobalSocketContext();
+
   useEffect(() => {
-    socketRef.current = io("http://localhost:3000", {
-      withCredentials: true, // cookie-bhi-bhejni-hai, JWT-ke-liye (auth-baad-mein-add-karenge)
-    });
+    if (!boardId || !isConnected || !socketRef.current) return;
 
-    socketRef.current.on("connect", () => {
-      console.log("Connected to server:", socketRef.current.id);
-    });
+    const socket = socketRef.current;
 
-    socketRef.current.emit("join-board", boardId);
+    // ===== JOIN-BOARD =====
+    socket.emit("join-board", boardId);
 
-    socketRef.current.on("shape-moved", ({ shapeId, x, y, rotation }) => {
+    // ===== LISTENERS — named-functions-banaye, cleanup-ke-liye-zaroori =====
+    const handleShapeMoved = ({ shapeId, x, y, rotation }) => {
       onShapeMoved({ shapeId, x, y, rotation });
-    });
-
-    socketRef.current.on("shape-added", ({ shapeId, x, y, type }) => {
-      onShapeAdded({ shapeId, x, y, type });
-    });
-
-    socketRef.current.on("shape-deleted", ({ shapeId }) => {
-      onShapedeleted(shapeId);
-    });
-
-    socketRef.current.on("shape-transformed", (data) => {
-      onShapeTransformed(data);
-    });
-    socketRef.current.on("arrow-connected", (data) => {
-      onArrowConnected(data);
-    });
-
-    socketRef.current.on("label-updated", ({ shapeId, updatedText }) => {
-      onUpdateLabel({ shapeId, updatedText });
-    });
-    socketRef.current.on("color-updated", ({ shapeId, key, value }) => {
-      onColorUpdated({ shapeId, key, value });
-    });
-
-    socketRef.current.on("arrow-deleted", ({ arrowId }) => {
-      onArrowDeleted(arrowId);
-    });
-
-    socketRef.current.on("freehand-start", (data) => {
-      onFreehandStart(data);
-    });
-
-    socketRef.current.on("freehand-points-binary", (data) => {
-      onFreehandPoints(data);
-    });
-    socketRef.current.on("cursor-move-binary", (data) => {
-      onCursorMove(data);
-    });
-    socketRef.current.on("user-left", (data) => {
-      onUserLeft(data);
-    });
-
-    return () => {
-      socketRef.current.disconnect();
     };
-  }, [boardId]);
+    const handleShapeAdded = ({ shapeId, x, y, type }) => {
+      onShapeAdded({ shapeId, x, y, type });
+    };
+    const handleShapeDeleted = ({ shapeId }) => {
+      onShapedeleted(shapeId);
+    };
+    const handleShapeTransformed = (data) => {
+      onShapeTransformed(data);
+    };
+    const handleArrowConnected = (data) => {
+      onArrowConnected(data);
+    };
+    const handleLabelUpdated = ({ shapeId, updatedText }) => {
+      onUpdateLabel({ shapeId, updatedText });
+    };
+    const handleColorUpdated = ({ shapeId, key, value }) => {
+      onColorUpdated({ shapeId, key, value });
+    };
+    const handleArrowDeleted = ({ arrowId }) => {
+      onArrowDeleted(arrowId);
+    };
+    const handleFreehandStart = (data) => {
+      onFreehandStart(data);
+    };
+    const handleFreehandPoints = (data) => {
+      onFreehandPoints(data);
+    };
+
+    const handleCleanCanvas=()=>{
+      onCleanCanvas();
+    }
+    const handleCursorMove = (data) => {
+      onCursorMove(data);
+    };
+    const handleUserLeft = (data) => {
+      onUserLeft(data);
+    };
+   
+    socket.on("shape-moved", handleShapeMoved);
+    socket.on("shape-added", handleShapeAdded);
+    socket.on("shape-deleted", handleShapeDeleted);
+    socket.on("shape-transformed", handleShapeTransformed);
+    socket.on("arrow-connected", handleArrowConnected);
+    socket.on("label-updated", handleLabelUpdated);
+    socket.on("color-updated", handleColorUpdated);
+    socket.on("arrow-deleted", handleArrowDeleted);
+    socket.on("freehand-start", handleFreehandStart);
+    socket.on("freehand-points-binary", handleFreehandPoints);
+    socket.on("canvas-cleaned", handleCleanCanvas);
+    socket.on("cursor-move-binary", handleCursorMove);
+    socket.on("user-left", handleUserLeft);
+
+    // ===== CLEANUP — sirf-LISTENERS-hatao, DISCONNECT-NAHI =====
+    return () => {
+      socket.off("shape-moved", handleShapeMoved);
+      socket.off("shape-added", handleShapeAdded);
+      socket.off("shape-deleted", handleShapeDeleted);
+      socket.off("shape-transformed", handleShapeTransformed);
+      socket.off("arrow-connected", handleArrowConnected);
+      socket.off("label-updated", handleLabelUpdated);
+      socket.off("color-updated", handleColorUpdated);
+      socket.off("arrow-deleted", handleArrowDeleted);
+      socket.off("freehand-start", handleFreehandStart);
+      socket.off("freehand-points-binary", handleFreehandPoints);
+      socket.off("cursor-move-binary", handleCursorMove);
+      socket.off("user-left", handleUserLeft);
+    };
+  }, [boardId, isConnected]);
 
   return socketRef;
 }
