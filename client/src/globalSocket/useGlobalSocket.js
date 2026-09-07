@@ -17,15 +17,11 @@ export function useGlobalSocket() {
     });
 
     socketRef.current.on("connect", () => {
-      console.log("Global socket connected:", socketRef.current.id);
       setIsConnected(true);
       socketRef.current.emit("register-user", user._id);
     });
 
     socketRef.current.on("access-requested", (data) => {
-      // Notification show karo ya custom event dispatch karo
-      console.log("Access requested:", data);
-
       // Toast notification
       notify.success(`${data.requesterName} wants to access your board`);
 
@@ -33,6 +29,30 @@ export function useGlobalSocket() {
       window.dispatchEvent(new CustomEvent("access-request", { detail: data }));
     });
 
+    socketRef.current.on("request-approved", () => {
+      notify.success("Access approved! Redirecting...");
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+
+    socketRef.current.on("request-rejected", () => {
+      notify.error("Access denied by owner");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
+    });
+
+    socketRef.current.on("removed-from-board", ({ boardId }) => {
+      // Sirf tabhi redirect karo agar user abhi usi board pe hai
+      if (window.location.pathname.includes(boardId)) {
+        notify.error("You were removed from this board");
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1000);
+      }
+    });
     socketRef.current.on("disconnect", () => {
       setIsConnected(false);
     });

@@ -15,7 +15,6 @@ import { Maximize, Minimize } from "lucide-react";
 import CollabModal from "./CollabModel.jsx";
 import RequestAccessScreen from "./RequestAccessScreen.jsx";
 import { useParams } from "react-router-dom";
-import RequestNotification from "./RequestNotification.jsx";
 export default function Board() {
   const {
     eraseWholeCanvas,
@@ -84,6 +83,8 @@ export default function Board() {
     updateCursorPosition,
     stopCursorTracking,
     boardAccess,
+    pendingRequests,
+    setPendingRequests,
   } = useBoard();
 
   const [loading, setLoading] = useState(false); // for cleanup
@@ -97,31 +98,22 @@ export default function Board() {
 
   const [grid, setGrid] = useState(false);
 
-  const [pendingRequests, setPendingRequests] = useState([]);
   const { id } = useParams();
   useEffect(() => {
     const handleAccessRequest = (event) => {
-      const { requesterId, requesterName, boardId } = event.detail;
-
-      // Sirf current board ke liye
-      if (boardId === id) {
+      const { requesterId, requesterName, boardId: reqBoardId } = event.detail;
+      if (reqBoardId === id) {
         setPendingRequests((prev) => [
           ...prev,
-          {
-            userId: requesterId,
-            userName: requesterName,
-            boardId: boardId,
-          },
+          { userId: requesterId, userName: requesterName, boardId: reqBoardId },
         ]);
-
         notify.info(`${requesterName} wants to join your board`);
       }
     };
-
     window.addEventListener("access-request", handleAccessRequest);
     return () =>
       window.removeEventListener("access-request", handleAccessRequest);
-  }, []);
+  }, [id, setPendingRequests]);
 
   const handleAssist = async () => {
     if (!canvasChangedSinceAI && aiResponse) {
@@ -293,22 +285,7 @@ export default function Board() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
-      {pendingRequests.length > 0 && (
-        <div className="fixed top-20 right-4 z-50 space-y-2">
-          {pendingRequests.map((req) => (
-            <RequestNotification
-              key={req.userId}
-              request={req}
-              onHandled={(userId) => {
-                setPendingRequests((prev) =>
-                  prev.filter((r) => r.userId !== userId),
-                );
-              }}
-            />
-          ))}
-        </div>
-      )}
-      {/* TOP BAR — canvas ke upar, apni height occupy kare */}
+      
       {!fullScreen && (
         <div ref={toolbarRef} className="shrink-0 z-50">
           <Toolbar
@@ -351,6 +328,8 @@ export default function Board() {
             setSelectedArrowId={setSelectedArrowId}
             setShowCollabModal={setShowCollabModal}
             eraseWholeCanvas={eraseWholeCanvas}
+            pendingRequests={pendingRequests}
+            setPendingRequests={setPendingRequests}
           />
         </div>
       )}

@@ -1,14 +1,15 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import api from "../../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/authSlice";
 import "./authStyle.css";
 import { notify } from "../../utils/toast.jsx";
-import {Button,Input} from "../";
+import { Button, Input } from "../";
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,8 +26,8 @@ export default function Login() {
       const res = await api.post("/user/login", data);
       dispatch(setUser(res.data.data.user));
       notify.welcome(`Welcome back ${res.data.data.user.name}!`);
-      navigate("/dashboard");
-
+      const redirectTo = location.state?.from || "/dashboard";
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err?.response?.data?.message || "Something went wrong");
     } finally {
@@ -71,7 +72,9 @@ export default function Login() {
         <span className="auth-input-error">{errors.password?.message}</span>
       </div>
 
-      <a href="#" className="auth-forgot">Forgot your password?</a>
+      <a href="#" className="auth-forgot">
+        Forgot your password?
+      </a>
 
       {error && <div className="auth-error-box">{error}</div>}
 

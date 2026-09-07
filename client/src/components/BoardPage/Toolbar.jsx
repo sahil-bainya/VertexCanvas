@@ -18,6 +18,7 @@ import {
 import TextToDiagram from "./TextToDiagram.jsx";
 import "./Toolbar.css";
 import { ToggleTheme } from "../";
+import PendingRequestsButton from "./PendingRequestsButton.jsx";
 export default function Toolbar({
   loading,
   handleAssist,
@@ -46,7 +47,9 @@ export default function Toolbar({
   setSelectedId,
   setSelectedArrowId,
   setShowCollabModal,
-  eraseWholeCanvas
+  eraseWholeCanvas,
+  pendingRequests,
+  setPendingRequests,
 }) {
   const navigate = useNavigate();
   const theme = useSelector((state) => state.theme.mode);
@@ -267,11 +270,20 @@ export default function Toolbar({
           <button
             className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!  ${theme === "dark" && "border border-primary/40"}`}
             onClick={() => setShowCollabModal(true)}
-            
           >
-            <Link size={18}/> Collab
+            <Link size={18} /> Collab
           </button>
         </div>
+            <div className="tooltip tooltip-bottom" data-tip="Notification">
+        <PendingRequestsButton
+          style={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5!  px-3! ${theme === "dark" && "border border-primary/40"}`}
+          pendingRequests={pendingRequests}
+          onHandled={(userId) => {
+            setPendingRequests((prev) =>
+              prev.filter((r) => r.userId !== userId),
+            );
+          }}
+        /></div>
         <div className="tooltip tooltip-bottom" data-tip="Change theme">
           <ToggleTheme
             style={`${theme === "dark" && "border border-primary/40 "} btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!`}

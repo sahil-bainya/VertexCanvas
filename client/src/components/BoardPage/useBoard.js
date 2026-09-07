@@ -784,19 +784,35 @@ export function useBoard() {
   };
 
   const [boardAccess, setBoardAccess] = useState(null); // null = loading
-
+  const [pendingRequests, setPendingRequests] = useState([]);
   useEffect(() => {
     (async () => {
-      const res = await api.get(`/boards/${id}`);
-      const { board, access } = res.data.data;
-
-      setBoardAccess(access);
-
-      if (access.isOwner || access.isCollaborator) {
-        setShapes(board.canvasData || []);
-        setBoardName(board.title);
-        setArrows(board.arrows || []);
-        setBoardNotes(board.boardNotes || []);
+      try {
+        const res = await api.get(`/boards/${id}`);
+        const { board, access } = res.data.data;
+        setBoardAccess(access);
+        if (access.isOwner || access.isCollaborator) {
+          setShapes(board.canvasData || []);
+          setBoardName(board.title);
+          setArrows(board.arrows || []);
+          setBoardNotes(board.boardNotes || []);
+        }
+        if (access.isOwner && board.pendingRequests?.length) {
+          setPendingRequests(
+            board.pendingRequests.map((pr) => ({
+              userId: pr.userId._id,
+              userName: pr.userId.name,
+              boardId: id,
+            })),
+          );
+        }
+      } catch (err) {
+        notify.error(`Could not load board ${err}`);
+        setBoardAccess({
+          isOwner: false,
+          isCollaborator: false,
+          hasPendingRequest: false,
+        });
       }
     })();
   }, [id]);
@@ -1114,6 +1130,6 @@ export function useBoard() {
     inviteUser,
     boardId,
     boardAccess,
-    eraseWholeCanvas,
+    eraseWholeCanvas,pendingRequests, setPendingRequests
   };
 }

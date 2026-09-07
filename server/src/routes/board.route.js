@@ -12,6 +12,8 @@ import {
   requestJoin,
   acceptRequest,
   rejectRequest,
+  removeCollaborator,
+  getCollaborators,
 } from "../controllers/board.controller.js";
 const router = Router();
 
@@ -26,5 +28,7 @@ router.route("/:id/notes").patch(updateNotes);
 router.post("/:id/join-request", requestJoin);
 router.post("/:id/accept-request", acceptRequest);
 router.post("/:id/reject-request", rejectRequest);
+router.get("/:id/collaborators", getCollaborators);
+router.post("/:id/remove-collaborator", removeCollaborator);
 
 export default router;

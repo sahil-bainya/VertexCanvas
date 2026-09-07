@@ -38,13 +38,16 @@ const getBoard = asyncHandler(async (req, res) => {
   if (!id) {
     throw new ApiError(400, "Invalid board Id");
   }
-  const board = await Board.findById(id);
+  const board = await Board.findById(id).populate(
+    "pendingRequests.userId",
+    "name email",
+  );
   if (!board) {
     throw new ApiError(404, "Board with this id not found");
   }
   const access = getBoardAccess(board, req.user._id);
-  const hasPendingRequest = board.pendingRequests?.some((req) =>
-    req.userId.equals(req.user._id),
+  const hasPendingRequest = board.pendingRequests?.some((pr) =>
+    pr.userId.equals(req.user._id),
   );
 
   // Agar owner nahi, collaborator nahi, aur pending request nahi - access deny
@@ -177,8 +180,8 @@ const requestJoin = asyncHandler(async (req, res) => {
   }
 
   // Check if already requested
-  const alreadyRequested = board.pendingRequests?.some((req) =>
-    req.userId.equals(userId),
+  const alreadyRequested = board.pendingRequests?.some((pr) =>
+    pr.userId.equals(userId),
   );
 
   if (alreadyRequested) {
@@ -218,24 +221,25 @@ const acceptRequest = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Only owner can accept requests");
   }
 
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
   // Pending request se remove karo
   board.pendingRequests = board.pendingRequests.filter(
-    (req) => !req.userId.equals(userId),
+    (req) => !req.userId.equals(userObjectId),
   );
 
   // Collaborator add karo (agar already nahi hai)
   const alreadyCollaborator = board.collaborators?.some((collabId) =>
-    collabId.equals(userId),
+    collabId.equals(userObjectId),
   );
 
   if (!alreadyCollaborator) {
-    board.collaborators.push(userId);
+    board.collaborators.push(userObjectId);
   }
 
   await board.save();
 
   // User ko notify karo (agar online hai)
-  console.log("IO instance:", io);
   const io = req.app.get("io");
   io.to(`user-${userId}`).emit("request-approved", {
     boardId: id,
@@ -255,10 +259,10 @@ const rejectRequest = asyncHandler(async (req, res) => {
   if (!access.isOwner) {
     throw new ApiError(403, "Only owner can reject requests");
   }
-
+  const userObjectId = new mongoose.Types.ObjectId(userId);
   // Pending request se remove karo
   board.pendingRequests = board.pendingRequests.filter(
-    (req) => !req.userId.equals(userId),
+    (req) => !req.userId.equals(userObjectId),
   );
 
   await board.save();
@@ -271,9 +275,60 @@ const rejectRequest = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, {}, "Request rejected"));
 });
+const getCollaborators = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
+  const board = await Board.findById(id).populate(
+    "collaborators",
+    "name email",
+  );
+  if (!board) throw new ApiError(404, "Board not found");
+
+  const access = getBoardAccess(board, req.user._id);
+  if (!access.isOwner) {
+    throw new ApiError(403, "Only owner can view collaborators");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { collaborators: board.collaborators },
+        "Collaborators fetched",
+      ),
+    );
+});
+
+const removeCollaborator = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  const board = await Board.findById(id);
+  if (!board) throw new ApiError(404, "Board not found");
+
+  const access = getBoardAccess(board, req.user._id);
+  if (!access.isOwner) {
+    throw new ApiError(403, "Only owner can remove collaborators");
+  }
+
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  board.collaborators = board.collaborators.filter(
+    (collabId) => !collabId.equals(userObjectId),
+  );
+
+  await board.save();
+
+  const io = req.app.get("io");
+  io.to(`user-${userId}`).emit("removed-from-board", { boardId: id });
+
+  return res.status(200).json(new ApiResponse(200, {}, "Collaborator removed"));
+});
 export {
   createBoard,
+  getCollaborators,
+  removeCollaborator,
   getAllBoards,
   getBoard,
   deleteBoard,

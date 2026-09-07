@@ -1,10 +1,11 @@
 export const getBoardAccess = (board, userId) => {
-  if (board.owner.equals(userId)) {
+  // String comparison use karo - reliable
+  if (board.owner.toString() === userId.toString()) {
     return { isOwner: true, isCollaborator: false };
   }
   
   const isCollaborator = board.collaborators?.some(
-    (collabId) => collabId.equals(userId)
+    (collabId) => collabId.toString() === userId.toString()
   );
   
   if (isCollaborator) {

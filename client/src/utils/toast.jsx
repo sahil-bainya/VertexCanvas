@@ -71,7 +71,7 @@ export const notify = {
         </div>
       ),
       {
-        duration: 2000,
+        duration: 4000,
         style: toastBaseStyle,
       },
     ),
