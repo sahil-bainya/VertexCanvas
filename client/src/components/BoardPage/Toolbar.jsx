@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Button } from "../";
+
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import {
   Workflow,
   NotebookText,
   ImageDown,
   Download,
-  Brain,
+ 
   Pencil,
   ChevronLeft,
   BrushCleaning,
@@ -15,12 +15,14 @@ import {
   Link,
   MousePointer2,
 } from "lucide-react";
-import TextToDiagram from "./TextToDiagram.jsx";
 import "./Toolbar.css";
 import { ToggleTheme } from "../";
 import PendingRequestsButton from "./PendingRequestsButton.jsx";
+import AiHelpPannel from "./AiHelpPannel.jsx";
 export default function Toolbar({
   loading,
+  stageRef,
+  stageSize,
   handleAssist,
   handleCleanup,
   notesShowing,
@@ -41,8 +43,6 @@ export default function Toolbar({
   shapeRefs,
   setPendingShapeType,
   pendingShapeType,
-  stageRef,
-  stageSize,
   connectingFrom,
   setSelectedId,
   setSelectedArrowId,
@@ -184,48 +184,19 @@ export default function Toolbar({
         </li>
       </ul>
       <div className="flex flex-row gap-1.5 flex-wrap">
-        <div className="dropdown dropdown-end">
-          <div
-            tabIndex={0}
-            role="button"
-            className="tooltip tooltip-bottom"
-            data-tip="use AI features"
-          >
-            <button
-              className={`btn btn-sm btn-ghost p-5! bg-base-300 rounded-xl ${theme === "dark" && "border border-primary/40"}`}
-            >
-              <Brain size={18} />
-              AI
-            </button>
-          </div>
-          <ul
-            tabIndex="-1"
-            className={`dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm ${theme === "dark" && "border border-primary/40"}`}
-          >
-            <li className="tooltip" data-tip="Get AI suggestions">
-              <Button onClick={handleAssist} children="Assist"></Button>
-            </li>
-            <li>
-              <Button
-                onClick={handleCleanup}
-                children="cleanup"
-                loading={loading}
-                loadingText="cleaning..."
-              ></Button>
-            </li>
-            <li>
-              <TextToDiagram
-                saveHistory={saveHistory}
-                setShapes={setShapes}
-                setArrows={setArrows}
-                shapes={shapes}
-                shapeRefs={shapeRefs}
-                stageRef={stageRef}
-                stageSize={stageSize}
-              />
-            </li>
-          </ul>
-        </div>
+        <AiHelpPannel
+          className={`btn btn-sm btn-ghost  bg-base-300 rounded-xl py-5! px-3! ${theme === "dark" && "border border-primary/40"}`}
+          handleAssist={handleAssist}
+          handleCleanup={handleCleanup}
+          loading={loading}
+          shapes={shapes}
+          setShapes={setShapes}
+          saveHistory={saveHistory}
+          shapeRefs={shapeRefs}
+          setArrows={setArrows}
+          stageRef={stageRef}
+          stageSize={stageSize}
+        />
         <div
           className="dropdown dropdown-end tooltip tooltip-bottom"
           data-tip="Export"
@@ -274,16 +245,17 @@ export default function Toolbar({
             <Link size={18} /> Collab
           </button>
         </div>
-            <div className="tooltip tooltip-bottom" data-tip="Notification">
-        <PendingRequestsButton
-          style={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5!  px-3! ${theme === "dark" && "border border-primary/40"}`}
-          pendingRequests={pendingRequests}
-          onHandled={(userId) => {
-            setPendingRequests((prev) =>
-              prev.filter((r) => r.userId !== userId),
-            );
-          }}
-        /></div>
+        <div className="tooltip tooltip-bottom" data-tip="Notification">
+          <PendingRequestsButton
+            style={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5!  px-3! ${theme === "dark" && "border border-primary/40"}`}
+            pendingRequests={pendingRequests}
+            onHandled={(userId) => {
+              setPendingRequests((prev) =>
+                prev.filter((r) => r.userId !== userId),
+              );
+            }}
+          />
+        </div>
         <div className="tooltip tooltip-bottom" data-tip="Change theme">
           <ToggleTheme
             style={`${theme === "dark" && "border border-primary/40 "} btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!`}

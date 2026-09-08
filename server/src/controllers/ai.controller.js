@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import groq from "../config/groq.js";
 import { APIError } from "groq-sdk";
+const aiModel="openai/gpt-oss-20b"
 
 const architectureAssist = asyncHandler(async (req, res) => {
   const { shapes, arrows } = req.body;
@@ -23,7 +24,7 @@ const architectureAssist = asyncHandler(async (req, res) => {
     })
     .join("\n");
 
- const prompt = `
+  const prompt = `
 You are an expert diagram analyzer and software architect.
 Analyze the following diagram and first identify what type it is, then provide relevant suggestions.
 
@@ -88,7 +89,7 @@ Return ONLY this JSON, nothing else:
 }
 `;
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: aiModel,
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
@@ -143,7 +144,7 @@ Total nodes must be exactly ${shapes.length}.
 `;
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: aiModel,
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
@@ -157,11 +158,11 @@ Total nodes must be exactly ${shapes.length}.
 });
 
 const textToDiagram = asyncHandler(async (req, res) => {
-  const { description ,startX = 100, startY = 100} = req.body;
+  const { description, startX = 100, startY = 100 } = req.body;
   if (!description || description.trim().length === 0) {
     throw new ApiError(400, "Description is required");
   }
- const prompt = `
+  const prompt = `
 You are an expert at converting natural language descriptions into structured diagrams.
 
 CRITICAL RULE — READ FIRST: Every numeric value (x, y, width, height, radius, points) 
@@ -261,7 +262,7 @@ Return ONLY this JSON, nothing else:
 `;
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: aiModel,
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });

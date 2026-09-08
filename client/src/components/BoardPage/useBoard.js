@@ -767,7 +767,13 @@ export function useBoard() {
     setBoardNotes(updatedNotes);
     await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
   };
-
+  const updateNote = async (noteId, updatedText) => {
+  const updatedNotes = boardNotes.map((n) =>
+    n.id === noteId ? { ...n, text: updatedText } : n
+  );
+  setBoardNotes(updatedNotes);
+  await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
+};
   const removeNotes = async (notesid) => {
     const updatedNotes = boardNotes.filter((notes) => notes.id !== notesid);
     setBoardNotes(updatedNotes);
@@ -1061,7 +1067,7 @@ export function useBoard() {
     notify.success("Link copied!");
   };
   return {
-    pencilColor,
+    pencilColor,updateNote,
     remoteCursors,
     startCursorTracking,
     updateCursorPosition,

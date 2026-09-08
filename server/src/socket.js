@@ -8,17 +8,12 @@ export const initSocket = (httpServer, app) => {
   });
   app.set("io", io);
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
-
     socket.on("register-user", (userId) => {
       socket.join(`user-${userId}`); // ← PERSONAL-room, boardId-se-ALAG
-      console.log(`Socket ${socket.id} registering as user-${userId}`);
     });
 
     socket.on("join-board", (boardId) => {
       socket.join(boardId);
-
-      console.log(`Socket ${socket.id} joined board ${boardId}`);
     });
 
     socket.on("shape-moved", ({ boardId, shapeId, x, y, rotation }) => {

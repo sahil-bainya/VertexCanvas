@@ -23,6 +23,7 @@ export default function Board() {
     setShapes,
     addToNotes,
     boardNotes,
+    updateNote,
     boardName,
     setBoardName,
     selectedId,
@@ -285,7 +286,6 @@ export default function Board() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
-      
       {!fullScreen && (
         <div ref={toolbarRef} className="shrink-0 z-50">
           <Toolbar
@@ -483,6 +483,7 @@ export default function Board() {
           <NotesPage
             boardNotes={boardNotes}
             onDelete={(id) => removeNotes(id)}
+            updateNote={updateNote}
             addNotes={addToNotes}
             setNotesShowing={setNotesShowing}
           />
