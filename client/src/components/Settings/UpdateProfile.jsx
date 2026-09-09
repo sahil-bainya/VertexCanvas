@@ -66,7 +66,7 @@ export default function UpdateProfile({ onClose }) {
           })}
         />
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end !">
           <Button className="btn" onClick={onClose}>
             Cancel
           </Button>

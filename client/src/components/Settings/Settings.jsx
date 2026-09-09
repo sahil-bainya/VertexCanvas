@@ -13,9 +13,9 @@ export default function Settings() {
           className="relative group cursor-pointer rounded-xl p-2!"
           onClick={() => setActiveModal("avatar")}
         >
-          <div className="avatar">
-            <div className="w-auto">
-              <img src={user?.avatar} alt="Avatar" />
+          <div className="avatar ">
+            <div className="w-40">
+              <img src={user?.avatar} alt="Avatar" className="rounded-xl"/>
               <div className="absolute inset-0 backdrop-brightness-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <SquarePen color="#ffffff" />
               </div>

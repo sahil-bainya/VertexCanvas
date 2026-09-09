@@ -27,7 +27,7 @@ export default function Dashboard() {
 
     const handleAccessRequested = ({ boardId, requesterId, requesterName }) => {
       // toast/modal-dikhao "X wants to join board Y"
-      notify.info(`${requesterName} requested access`);
+      notify.info(`${requesterName} requested access`); 
     };
 
     socketRef.current.on("access-requested", handleAccessRequested);
@@ -36,7 +36,6 @@ export default function Dashboard() {
       socketRef.current.off("access-requested", handleAccessRequested);
     };
   }, [socketRef]);
-
 
   useEffect(() => {
     async function fetchData() {
@@ -74,7 +73,7 @@ export default function Dashboard() {
     try {
       await api.delete(`/boards/${id}`);
       dispatch(removeBoard(id));
-      notify.success("Board deleted!")
+      notify.success("Board deleted!");
     } catch (err) {
       notify.error(
         err?.response?.data?.message ||
@@ -97,14 +96,57 @@ export default function Dashboard() {
   };
   if (loading) return <div>Loading...</div>;
   return (
-    <div className="px-4! py-4!">
-      <div className="flex justify-end px-6! py-4! ">
+    <div className="px-4! py-16!">
+      <div className=" flex justify-end px-6! py-4!">
         <button className="btn btn-soft btn-info px-2!" onClick={handleCreate}>
           Create New Board
         </button>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+      <div >
+        <table className="table">
+          {/* head */}
+          <thead>
+            <tr>
+              <th className="text-xs tracking-wider text-base-content/60 py-3!">
+                NAME
+              </th>
+              <th className="text-xs tracking-wider text-base-content/60 py-3!">
+                CREATED
+              </th>
+              <th className="text-xs tracking-wider text-base-content/60 py-3!">
+                EDITED
+              </th>
+              <th className="text-xs tracking-wider text-base-content/60 py-3!">
+                AUTHOR
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {boards.length > 0 ? (
+              boards.map((board) => (
+                <Card
+                  key={board._id}
+                  board={board}
+                  isEditing={editingBoardId === board._id}
+                  editingTitle={editingTitle}
+                  onNavigate={() => navigate(`/board/${board._id}`)}
+                  onEditStart={() => {
+                    setEditingTitle(board.title);
+                    setEditingBoardId(board._id);
+                  }}
+                  onEditChange={(val) => setEditingTitle(val)}
+                  onEditSave={() => saveTitle(board._id)}
+                  onEditCancel={() => setEditingBoardId(null)}
+                  onDelete={(e) => handleDelete(e, board._id)}
+                />
+              ))
+            ) : (
+              <tr></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
         {boards.length > 0 ? (
           boards.map((board) => (
             <Card
@@ -124,9 +166,9 @@ export default function Dashboard() {
             />
           ))
         ) : (
-          <p>Koi board nahi — naya banao</p>
-        )}
-      </div>
+          <p></p>
+        )} */}
+      {/* </div> */}
     </div>
   );
 }

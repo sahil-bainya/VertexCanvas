@@ -2,37 +2,26 @@ import { useSelector } from "react-redux";
 import { UserRound } from "lucide-react";
 import { AppName } from "../";
 import Menubar from "./Menubar.jsx";
-import { useLocation } from "react-router-dom";
 
 export default function Header() {
   const user = useSelector((state) => state.auth.user);
-  const location = useLocation();
-  const hideSearchBox = location.pathname.startsWith("/settings");
   return (
-    <nav>
+    <nav className="fixed top-0 left-0 w-full z-50 shadow-lg  ">
       <div className="navbar bg-base-100 shadow-sm h-16 px-4!">
         <div className="flex-1 pl-2!">
-          <a >
+          <a>
             <AppName />
           </a>
         </div>
-        
-        <div className="flex items-center pr-2!">
-          {!hideSearchBox && (
-            <input
-              type="text"
-              placeholder="Search"
-              className="input input-bordered w-24 md:w-auto px-4! mx-5!"
-            />
-          )}
 
+        <div className="flex items-center pr-2!">
           <div className="dropdown dropdown-end">
             <div
               tabIndex={0}
               role="button"
               className="btn btn-ghost btn-circle avatar hover:bg-base-200 transition-colors"
             >
-              <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden bg-base-200">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-base-200 ring-primary ring-offset-base-100   ring-1 ring-offset-1">
                 {user?.avatar ? (
                   <img
                     src={`${user?.avatar}`}

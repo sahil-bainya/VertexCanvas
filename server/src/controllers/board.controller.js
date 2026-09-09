@@ -27,10 +27,25 @@ const createBoard = asyncHandler(async (req, res) => {
 
 const getAllBoards = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const boards = await Board.find({ owner: userId });
+  const boards = await Board.find({ owner: userId })
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  // req.user already available from auth middleware
+  const boardsWithOwnerName = boards.map((board) => ({
+    ...board,
+    ownerName:req.user.name,
+  }));
+
   return res
     .status(200)
-    .json(new ApiResponse(200, { boards }, "Boards fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { boards: boardsWithOwnerName },
+        "Boards fetched successfully",
+      ),
+    );
 });
 
 const getBoard = asyncHandler(async (req, res) => {

@@ -27,7 +27,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       {!hideNavbar && <Header />}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col ">
         <Outlet />
       </main>
       {!hideNavbar && <Footer />}

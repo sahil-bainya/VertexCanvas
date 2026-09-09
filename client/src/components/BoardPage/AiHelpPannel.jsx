@@ -39,7 +39,7 @@ function GeneratorModal({
   stageRef,
   stageSize,
 }) {
-  const [activeTab, setActiveTab] = useState("generate");
+  const [activeTab, setActiveTab] = useState("");
   const [genLoading, setGenLoading] = useState(false);
 
   // Analyze and Organize are action buttons, not panels — they fire their
@@ -62,7 +62,7 @@ function GeneratorModal({
   };
 
   return (
-    <div className="modal modal-open">
+    <div className="modal modal-open ">
       <div className="modal-box w-11/12 max-w-3xl  rounded-2xl">
         <div className="flex justify-end mb-1!">
           <button
@@ -75,7 +75,7 @@ function GeneratorModal({
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-5! px-3!">
+        <div className="grid grid-cols-3 gap-3 mb-5! px-3! ">
           {TOP_TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -136,6 +136,7 @@ function GeneratorModal({
           />
         )}
       </div>
+
       <div
         className="modal-backdrop"
         onClick={genLoading ? undefined : onClose}
