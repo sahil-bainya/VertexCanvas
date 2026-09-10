@@ -163,6 +163,7 @@ export default function TextToDiagram({
         currentDescription,
         suggestedStartX,
         suggestedStartY,
+        selectedType
       );
       saveHistory();
 

@@ -3,7 +3,205 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import groq from "../config/groq.js";
 import { APIError } from "groq-sdk";
-const aiModel="openai/gpt-oss-20b"
+
+const AI_MODELS = {
+  assist: "openai/gpt-oss-120b",
+  cleanup: "openai/gpt-oss-20b",
+  textToDiagram: "openai/gpt-oss-120b",
+};
+
+const getDiagramTypeInstructions = (selectedType) => {
+  const typeInstructions = {
+    flowchart: `
+This is a FLOWCHART. Follow these conventions strictly:
+- Use "roundedRect" for start/end points
+- Use "diamond" for every decision/conditional point
+- Use "rect" for process/action steps
+- Flow should be logical, mostly top-to-bottom or left-to-right`,
+
+    er_diagram: `
+This is an ENTITY-RELATIONSHIP (ER) DIAGRAM. Follow these conventions strictly:
+- Use "rect" for entities (e.g. "User", "Order", "Product")
+- Each entity's text should represent the table/entity name only
+- Arrows represent relationships between entities (one-to-many, many-to-many)
+- Do NOT use diamond or ellipse shapes — only rect for entities`,
+
+    architecture: `
+This is a SYSTEM ARCHITECTURE DIAGRAM. Follow these conventions strictly:
+- Use "rect" for services, APIs, and application components
+- Use "ellipse" for external systems, third-party services, or actors (e.g. "User", "Payment Gateway")
+- Use "cylinder"-like representation via "roundedRect" for databases if no cylinder shape exists
+- Arrows represent data flow or API calls between components`,
+
+    mindmap: `
+This is a MIND MAP. Follow these conventions strictly:
+- Use "ellipse" or "circle" for the central idea and main branches
+- Use "rect" for sub-points or details branching outward
+- Arrows/connections radiate outward from the central idea`,
+
+    auto: `
+First, analyze the user's description and DETECT the most appropriate diagram type
+(flowchart, er_diagram, architecture, or mindmap) based on the content. Then apply
+the shape conventions appropriate to that detected type:
+- Flowchart → roundedRect (start/end), diamond (decisions), rect (steps)
+- ER diagram → rect for entities only, arrows for relationships
+- Architecture → rect for services, ellipse for external systems/actors
+- Mind map → ellipse/circle for central idea, rect for branches
+Choose whichever type best matches the description's content and intent.`,
+  };
+
+  return typeInstructions[selectedType] || typeInstructions.auto;
+};
+
+const diagramSchema = {
+  type: "object",
+  properties: {
+    shapes: {
+      type: "array",
+      items: {
+        anyOf: [
+          // rect / roundedRect — share the same fields
+          {
+            type: "object",
+            description: "A rectangular or rounded-rectangular shape",
+            properties: {
+              id: {
+                type: "string",
+                description: "Sequential numeric string id, e.g. '1'",
+              },
+              type: { type: "string", enum: ["rect", "roundedRect"] },
+              x: { type: "number" },
+              y: { type: "number" },
+              width: { type: "number" },
+              height: { type: "number" },
+              text: {
+                type: "string",
+                description: "Short label, max 3-4 words",
+              },
+              fill: { type: "string", description: "Hex color, e.g. #e0f2fe" },
+              stroke: {
+                type: "string",
+                description: "Hex color, e.g. #0369a1",
+              },
+            },
+            required: [
+              "id",
+              "type",
+              "x",
+              "y",
+              "width",
+              "height",
+              "text",
+              "fill",
+              "stroke",
+            ],
+            additionalProperties: false,
+          },
+          // circle
+          {
+            type: "object",
+            description: "A circular shape",
+            properties: {
+              id: { type: "string" },
+              type: { type: "string", enum: ["circle"] },
+              x: { type: "number" },
+              y: { type: "number" },
+              radius: { type: "number", description: "Roughly 50-70" },
+              text: { type: "string" },
+              fill: { type: "string" },
+              stroke: { type: "string" },
+            },
+            required: [
+              "id",
+              "type",
+              "x",
+              "y",
+              "radius",
+              "text",
+              "fill",
+              "stroke",
+            ],
+            additionalProperties: false,
+          },
+          // ellipse
+          {
+            type: "object",
+            description: "An elliptical shape",
+            properties: {
+              id: { type: "string" },
+              type: { type: "string", enum: ["ellipse"] },
+              x: { type: "number" },
+              y: { type: "number" },
+              radiusX: { type: "number" },
+              radiusY: { type: "number" },
+              text: { type: "string" },
+              fill: { type: "string" },
+              stroke: { type: "string" },
+            },
+            required: [
+              "id",
+              "type",
+              "x",
+              "y",
+              "radiusX",
+              "radiusY",
+              "text",
+              "fill",
+              "stroke",
+            ],
+            additionalProperties: false,
+          },
+          // diamond
+          {
+            type: "object",
+            description: "A diamond/decision shape",
+            properties: {
+              id: { type: "string" },
+              type: { type: "string", enum: ["diamond"] },
+              x: { type: "number" },
+              y: { type: "number" },
+              points: {
+                type: "array",
+                description:
+                  "Exactly 8 numbers: 4 relative vertices [x1,y1,x2,y2,x3,y3,x4,y4], e.g. [0,-40,40,0,0,40,-40,0]",
+                items: { type: "number" },
+              },
+              text: { type: "string" },
+              fill: { type: "string" },
+              stroke: { type: "string" },
+            },
+            required: [
+              "id",
+              "type",
+              "x",
+              "y",
+              "points",
+              "text",
+              "fill",
+              "stroke",
+            ],
+            additionalProperties: false,
+          },
+        ],
+      },
+    },
+    arrows: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "e.g. 'a1'" },
+          from: { type: "string", description: "Must match a shape id above" },
+          to: { type: "string", description: "Must match a shape id above" },
+        },
+        required: ["id", "from", "to"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["shapes", "arrows"],
+  additionalProperties: false,
+};
 
 const architectureAssist = asyncHandler(async (req, res) => {
   const { shapes, arrows } = req.body;
@@ -89,7 +287,7 @@ Return ONLY this JSON, nothing else:
 }
 `;
   const response = await groq.chat.completions.create({
-    model: aiModel,
+    model: AI_MODELS["assist"],
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
@@ -144,7 +342,7 @@ Total nodes must be exactly ${shapes.length}.
 `;
 
   const response = await groq.chat.completions.create({
-    model: aiModel,
+    model: AI_MODELS["cleanup"],
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
@@ -158,113 +356,64 @@ Total nodes must be exactly ${shapes.length}.
 });
 
 const textToDiagram = asyncHandler(async (req, res) => {
-  const { description, startX = 100, startY = 100 } = req.body;
+  const { description, startX = 100, startY = 100, selectedType } = req.body;
   if (!description || description.trim().length === 0) {
     throw new ApiError(400, "Description is required");
   }
+
   const prompt = `
 You are an expert at converting natural language descriptions into structured diagrams.
-
-CRITICAL RULE — READ FIRST: Every numeric value (x, y, width, height, radius, points) 
-in your final JSON output must be a single computed number. NEVER write expressions 
-like "100 + 180" or "360 + 200". If you need to calculate a position, do the math 
-in your head and write only the final integer result.
-WRONG: "x": 100 + 180 + 180
-RIGHT: "x": 460
 
 USER DESCRIPTION:
 "${description}"
 
-CANVAS GUIDELINES:
-Start the first shape at approximately x:${startX}, y:${startY} — this is the next 
-available empty area on the canvas. Assume a logical canvas area of approximately 
-1400 x 900 units extending from this starting point.
-Distribute shapes within this area in a way that looks natural and readable — 
-do not place all shapes in a tiny cluster, and do not spread them so far apart 
-that the diagram looks sparse or disconnected. If there are many components 
-(more than 6-7), it is acceptable to use a more compact spacing or wrap into 
-multiple rows, but always stay reasonably close to this logical area.
+DIAGRAM TYPE:
+${getDiagramTypeInstructions(selectedType)}
 
-SHAPE SELECTION (use the most semantically appropriate shape type):
-- "rect" — general process, action, or step (default choice)
-- "roundedRect" — start/end points, or softer process steps
-- "diamond" — decision points, conditionals (if/else, yes/no branches)
-- "ellipse" — entities, actors, or external systems (e.g. "User", "Third-party API")
-- "circle" — small standalone nodes or simple states
-Only use "diamond" when there is a genuine decision/branch in the description.
-Default to "rect" when unsure.
+CANVAS GUIDELINES:
+Start the first shape at approximately x:${startX}, y:${startY} — this is the next
+available empty area on the canvas. Assume a logical canvas area of approximately
+1400 x 900 units extending from this starting point.
+Distribute shapes within this area in a way that looks natural and readable —
+do not place all shapes in a tiny cluster, and do not spread them so far apart
+that the diagram looks sparse or disconnected. If there are many components
+(more than 6-7), it is acceptable to use a more compact spacing or wrap into
+multiple rows, but always stay reasonably close to this logical area.
 
 STYLING (use color purposefully, not randomly):
 - fill: use a light, muted color appropriate to the shape's role. Use HEX colors only.
-  Examples: "#e0f2fe" (light blue, for systems/data), "#fef9c3" (light yellow, for decisions), 
-  "#dcfce7" (light green, for start/success), "#fee2e2" (light red, for errors/failure/end), 
+  Examples: "#e0f2fe" (light blue, for systems/data), "#fef9c3" (light yellow, for decisions),
+  "#dcfce7" (light green, for start/success), "#fee2e2" (light red, for errors/failure/end),
   "#f3f4f6" (light gray, for general/neutral steps)
-- stroke: use a darker shade that complements the fill (e.g. fill "#e0f2fe" pairs with stroke "#0369a1")
-- Do NOT use pure white, pure black, or fully transparent fills unless the step is neutral/default
-- Keep strokeWidth at exactly 2 for all shapes — do not vary this
-- Never set opacity below 0.85 — text must remain clearly readable against the fill
+- stroke: use a darker shade that complements the fill
 
 Your task:
 1. Identify all distinct components, entities, or steps mentioned
 2. Identify the relationships or flow between them
-3. Convert this into shapes and arrows that can be rendered on a canvas
+3. Convert this into shapes and arrows following the DIAGRAM TYPE conventions above
 
 RULES:
 - Each shape's width should be based on text length (estimate: text length * 7 + 30, minimum 40, maximum 240)
-- Use consistent height of 70 for rect/roundedRect shapes; for diamond/ellipse/circle, 
-  use a radius or equivalent sizing of roughly 50-70 so the label fits comfortably
+- Use consistent height of 70 for rect/roundedRect; for diamond/ellipse/circle, use a radius/size of roughly 50-70
 - Arrange shapes in a logical flow — left-to-right for processes, top-to-bottom for hierarchies
 - Space shapes at least 180px apart horizontally and 140px apart vertically
-- Start first shape at x:100, y:100, and keep the overall diagram within the 1400 x 900 logical area
-- Every relationship mentioned becomes an arrow connecting two shapes by their ids
 - Use sequential numeric strings as ids: "1", "2", "3"...
-- If the description implies a decision or branching (if/else, success/failure), 
-  create multiple arrows from the diamond shape representing that decision
-- Keep shape labels short and clear — max 3-4 words, extracted from the description, not verbatim copied
+- If the description implies a decision or branching, create multiple arrows from the diamond shape
+- Keep shape labels short and clear — max 3-4 words
 - Do not invent components that were not mentioned or clearly implied
-- If the description is ambiguous, make the most reasonable interpretation a software engineer would make
-
-SHAPE-SPECIFIC JSON FORMATS:
-- For "rect", "roundedRect": use "x", "y", "width", "height"
-- For "circle": use "x", "y", "radius" (no width/height)
-- For "ellipse": use "x", "y", "radiusX", "radiusY"
-- For "diamond": use "x", "y", and "points" as an array of 8 numbers representing 
-  4 relative vertices, e.g. "points": [0, -40, 40, 0, 0, 40, -40, 0]
-Do not mix formats — only include the properties relevant to the chosen shape type.
-
-FINAL REMINDER BEFORE YOU OUTPUT: Every x, y, width, height, radius, and point value 
-below must be a plain number with no arithmetic operators (+, -, *, /) anywhere in 
-the JSON. Double-check your output before finalizing.
-
-Return ONLY this JSON, nothing else:
-{
-  "shapes": [
-    {
-      "id": "1",
-      "type": "rect",
-      "x": number,
-      "y": number,
-      "width": number,
-      "height": 70,
-      "text": "short label",
-      "fill": "#hexcolor",
-      "stroke": "#hexcolor"
-    }
-  ],
-  "arrows": [
-    {
-      "id": "a1",
-      "from": "1",
-      "to": "2"
-    }
-  ]
-}
 `;
 
   const response = await groq.chat.completions.create({
-    model: aiModel,
+    model: AI_MODELS["textToDiagram"],
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "diagram_generation",
+        strict: true,
+        schema: diagramSchema,
+      },
+    },
   });
   if (!response) {
     throw new ApiError(500, "Groq error");

@@ -1,4 +1,4 @@
-import { EllipsisVertical, Pencil, Trash } from "lucide-react";
+import { Ellipsis , Pencil, Trash } from "lucide-react";
 function timeAgo(dateString) {
   const updatedAt = new Date(dateString);
   const now = new Date();
@@ -31,7 +31,7 @@ export default function Card({
   className="hover:bg-base-200 cursor-pointer transition-colors "
   onClick={onNavigate}
 >
-  <td className="py-3! text-lg ">
+  <td className="p-3! text-lg ">
     {isEditing ? (
       <input
         autoFocus
@@ -66,7 +66,7 @@ export default function Card({
           onClick={(e) => e.stopPropagation()}
           className="p-2! rounded-full hover:bg-base-content/10 transition-colors cursor-pointer"
         >
-          <EllipsisVertical className="text-base-content/50" size={20} />
+          <Ellipsis  className="text-base-content/50" size={20} />
         </div>
 
         {/* Menu */}

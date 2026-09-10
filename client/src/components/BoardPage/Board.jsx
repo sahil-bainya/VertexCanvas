@@ -479,7 +479,7 @@ export default function Board() {
 
       {/* Notes Page — right side slide-in */}
       {notesShowing && (
-        <div className="absolute right-0 top-0 h-full z-50 shadow-xl border-l border-base-300 w-[clamp(260px,25vw,380px)] overflow-hidden">
+        <div className="absolute right-0 top-0 h-full z-50 shadow-2xl border-2 border-base-300 w-[clamp(260px,25vw,380px)] overflow-hidden ">
           <NotesPage
             boardNotes={boardNotes}
             onDelete={(id) => removeNotes(id)}

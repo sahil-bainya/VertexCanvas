@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   const handleCreate = async () => {
     try {
-      const res = await api.post("/boards", { title: "Untitled Board" });
+      const res = await api.post("/boards", { title: "Untitled Whiteboard" });
       dispatch(addBoard(res.data.data.board));
       navigate(`/board/${res.data.data.board._id}`);
     } catch (err) {
@@ -96,7 +96,7 @@ export default function Dashboard() {
   };
   if (loading) return <div>Loading...</div>;
   return (
-    <div className="px-4! py-16!">
+    <div className=" py-16!">
       <div className=" flex justify-end px-6! py-4!">
         <button className="btn btn-soft btn-info px-2!" onClick={handleCreate}>
           Create New Board
@@ -106,8 +106,8 @@ export default function Dashboard() {
         <table className="table">
           {/* head */}
           <thead>
-            <tr>
-              <th className="text-xs tracking-wider text-base-content/60 py-3!">
+            <tr >
+              <th className="text-xs tracking-wider text-base-content/60 p-3!">
                 NAME
               </th>
               <th className="text-xs tracking-wider text-base-content/60 py-3!">
