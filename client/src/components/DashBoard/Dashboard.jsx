@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import api from "../../services/api.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Card from "./Card.jsx";
+
+import api from "../../services/api.js";
+import Row from "./Row.jsx";
 import {
   addBoard,
   removeBoard,
@@ -26,8 +26,7 @@ export default function Dashboard() {
     if (!socketRef.current) return;
 
     const handleAccessRequested = ({ boardId, requesterId, requesterName }) => {
-      // toast/modal-dikhao "X wants to join board Y"
-      notify.info(`${requesterName} requested access`); 
+      notify.info(`${requesterName} requested access`);
     };
 
     socketRef.current.on("access-requested", handleAccessRequested);
@@ -69,11 +68,11 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (e, id) => {
-    e.stopPropagation(); // <-- to stop the event bubbling , otherwise it goes to the parent also
+    e.stopPropagation();
     try {
       await api.delete(`/boards/${id}`);
       dispatch(removeBoard(id));
-      notify.success("Board deleted!");
+      notify.info("Board deleted!");
     } catch (err) {
       notify.error(
         err?.response?.data?.message ||
@@ -85,7 +84,7 @@ export default function Dashboard() {
   const saveTitle = async (id) => {
     try {
       await api.patch(`/boards/${id}`, {
-        title: editingTitle || "Untitled Board",
+        title: editingTitle || "Untitled Whiteboard",
       });
       dispatch(updateBoard({ id, title: editingTitle }));
     } catch (err) {
@@ -98,15 +97,14 @@ export default function Dashboard() {
   return (
     <div className=" py-16!">
       <div className=" flex justify-end px-6! py-4!">
-        <button className="btn btn-soft btn-info px-2!" onClick={handleCreate}>
-          Create New Board
+        <button className="btn btn-soft btn-primary px-2!" onClick={handleCreate}>
+          Create New File
         </button>
       </div>
-      <div >
+      <div>
         <table className="table">
-          {/* head */}
           <thead>
-            <tr >
+            <tr>
               <th className="text-xs tracking-wider text-base-content/60 p-3!">
                 NAME
               </th>
@@ -124,7 +122,7 @@ export default function Dashboard() {
           <tbody>
             {boards.length > 0 ? (
               boards.map((board) => (
-                <Card
+                <Row
                   key={board._id}
                   board={board}
                   isEditing={editingBoardId === board._id}
@@ -146,29 +144,6 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-        {boards.length > 0 ? (
-          boards.map((board) => (
-            <Card
-              key={board._id}
-              board={board}
-              isEditing={editingBoardId === board._id}
-              editingTitle={editingTitle}
-              onNavigate={() => navigate(`/board/${board._id}`)}
-              onEditStart={() => {
-                setEditingTitle(board.title);
-                setEditingBoardId(board._id);
-              }}
-              onEditChange={(val) => setEditingTitle(val)}
-              onEditSave={() => saveTitle(board._id)}
-              onEditCancel={() => setEditingBoardId(null)}
-              onDelete={(e) => handleDelete(e, board._id)}
-            />
-          ))
-        ) : (
-          <p></p>
-        )} */}
-      {/* </div> */}
     </div>
   );
 }

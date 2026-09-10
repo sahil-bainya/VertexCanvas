@@ -1,9 +1,9 @@
 export default function Button({
-  children, // text inside the button
+  children,
   type = "button",
-  loading, // when data is fetching from api then the user can not click on button again and again
+  loading,
   buttonType = "btn-soft",
-  className ="btn px-2!",
+  className = "btn px-2!",
   ...props
 }) {
   return (

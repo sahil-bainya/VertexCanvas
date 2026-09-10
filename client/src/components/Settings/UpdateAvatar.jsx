@@ -1,12 +1,11 @@
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import api from "../../services/api";
-import { setUser } from "../../store/authSlice";
+import api from "../../services/api.js";
+import { setUser } from "../../store/authSlice.js";
 import { Button } from "../";
 import { notify } from "../../utils/toast.jsx";
 export default function UpdateAvatar({ onClose }) {
-  // ← onDone prop lo
   const dispatch = useDispatch();
   const { handleSubmit, register } = useForm();
   const [loading, setLoading] = useState(false);

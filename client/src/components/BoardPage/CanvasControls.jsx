@@ -75,7 +75,7 @@ export default function CanvasControls({
           <label htmlFor="grid-toggle">
             <Grid3x2 size={20} />
           </label>
-        </div>  
+        </div>
       </div>
     </div>
   );

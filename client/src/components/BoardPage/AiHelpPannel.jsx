@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FileSearch, Layers, Share2, Sparkles, Loader2, X } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
 
-// ---- Static config -------------------------------------------------------
 
 const TOP_TABS = [
   {
@@ -20,17 +19,16 @@ const TOP_TABS = [
   { id: "generate", label: "Generate", sub: "Create from text", icon: Share2 },
 ];
 
-// ---- Modal content ---------------------------------------------------------
 
 function GeneratorModal({
   onClose,
-  // Analyze
+
   onAssist,
-  // Organize
+
   onCleanup,
   loading,
   loadingText = "cleaning...",
-  // Generate
+
   saveHistory,
   setShapes,
   setArrows,
@@ -42,9 +40,6 @@ function GeneratorModal({
   const [activeTab, setActiveTab] = useState("");
   const [genLoading, setGenLoading] = useState(false);
 
-  // Analyze and Organize are action buttons, not panels — they fire their
-  // handler straight away and close the popover, same as the old dropdown
-  // menu items. Generate is the only tab with a panel underneath it.
   const handleTabClick = (tab) => {
     if (genLoading) return;
     if (tab.id === "analyze") {

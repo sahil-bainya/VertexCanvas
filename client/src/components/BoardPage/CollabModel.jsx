@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { notify } from "../../utils/toast.jsx";
 import api from "../../services/api.js";
-import { X } from "lucide-react";
 
 export default function CollabModal({ boardId, onClose }) {
   const [copied, setCopied] = useState(false);
@@ -17,8 +17,8 @@ export default function CollabModal({ boardId, onClose }) {
         const res = await api.get(`/boards/${boardId}/collaborators`);
         setCollaborators(res.data.data.collaborators || []);
       } catch (err) {
-        console.log(`${err}`)
-        // owner-only route — agar user owner nahi hai toh silently ignore karo
+        console.log(`${err}`);
+
         setCollaborators([]);
       } finally {
         setLoadingList(false);

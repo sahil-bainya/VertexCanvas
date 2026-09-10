@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
-import { Input, Button } from "../";
-import { useState } from "react";
-import api from "../../services/api";
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "../../store/authSlice";
+import { useState } from "react";
+import { Input, Button } from "../";
+import api from "../../services/api.js";
+import { setUser } from "../../store/authSlice.js";
 import { notify } from "../../utils/toast.jsx";
 export default function UpdateProfile({ onClose }) {
   const user = useSelector((state) => state.auth.user);
@@ -28,7 +28,7 @@ export default function UpdateProfile({ onClose }) {
 
       notify.success("Details updated!");
       dispatch(setUser(updatedUser.data.data));
-      onClose()
+      onClose();
     } catch (err) {
       notify.error(
         err?.response?.data?.message ||

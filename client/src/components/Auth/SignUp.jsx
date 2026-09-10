@@ -4,9 +4,9 @@ import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/authSlice";
-import "./authStyle.css"; 
 import { notify } from "../../utils/toast.jsx";
-import {Button,Input} from "../"
+import { Button, Input } from "../";
+
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -40,28 +40,40 @@ export default function SignUp() {
     }
   };
 
-  return (
-    <form className="auth-form-inner" onSubmit={handleSubmit(create)}>
-      <h1>Create Account</h1>
-      <div className="auth-divider" />
+  const inputClass =
+    "w-full bg-base-200 border-2 border-transparent focus:border-primary focus:bg-base-100 rounded-lg !px-3.5 !py-2.5 text-sm text-base-content placeholder:text-base-content/40 outline-none transition-colors";
+  const labelClass =
+    "text-[11px] font-semibold text-base-content/60 uppercase tracking-wider !pl-0.5";
 
-      <div className="auth-input-group">
-        <label>Name</label>
+  return (
+    <form
+      className="flex flex-col items-center justify-center w-full gap-1"
+      onSubmit={handleSubmit(create)}
+    >
+      <h1 className="text-2xl font-extrabold text-base-content !mb-1">Create Account</h1>
+      <div className="w-10 h-[3px] rounded bg-gradient-to-r from-primary to-secondary !mb-4" />
+
+      <div className="w-full flex flex-col gap-1 !mb-1">
+        <label className={labelClass}>Name</label>
         <Input
           type="text"
           placeholder="Your full name"
-          autoComplete="off" 
+          autoComplete="off"
+          className={inputClass}
           {...register("name", { required: "Name is required" })}
         />
-        <span className="auth-input-error">{errors.name?.message}</span>
+        <span className="text-[11px] text-error !pl-0.5 min-h-[16px]">
+          {errors.name?.message}
+        </span>
       </div>
 
-      <div className="auth-input-group">
-        <label>Email</label>
+      <div className="w-full flex flex-col gap-1 !mb-1">
+        <label className={labelClass}>Email</label>
         <Input
           type="email"
           placeholder="you@example.com"
-          autoComplete="off" 
+          autoComplete="off"
+          className={inputClass}
           {...register("email", {
             required: "Email is required",
             validate: {
@@ -70,39 +82,54 @@ export default function SignUp() {
             },
           })}
         />
-        <span className="auth-input-error">{errors.email?.message}</span>
+        <span className="text-[11px] text-error !pl-0.5 min-h-[16px]">
+          {errors.email?.message}
+        </span>
       </div>
 
-      <div className="auth-input-group">
-        <label>Password</label>
+      <div className="w-full flex flex-col gap-1 !mb-1">
+        <label className={labelClass}>Password</label>
         <Input
           type="password"
           placeholder="••••••••"
-          autoComplete="new-password" 
+          autoComplete="new-password"
+          className={inputClass}
           {...register("password", {
             required: "Password is required",
-            minLength: {
-              value: 6,
-              message: "Minimum 6 characters",
-            },
+            minLength: { value: 6, message: "Minimum 6 characters" },
           })}
         />
-        <span className="auth-input-error">{errors.password?.message}</span>
+        <span className="text-[11px] text-error !pl-0.5 min-h-[16px]">
+          {errors.password?.message}
+        </span>
       </div>
 
-      <div className="auth-input-group">
-        <label>Avatar <span style={{ color: '#bbb', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+      <div className="w-full flex flex-col gap-1 !mb-1">
+        <label className={labelClass}>
+          Avatar <span className="normal-case tracking-normal text-base-content/40">(optional)</span>
+        </label>
         <Input
           type="file"
           accept="image/*"
+          className="w-full bg-base-200 border-2 border-transparent focus:border-primary rounded-lg !px-3.5 !py-2 text-xs text-base-content/60 outline-none transition-colors cursor-pointer file:!mr-3 file:!py-1.5 file:!px-3 file:rounded-md file:border-0 file:bg-primary file:text-primary-content file:text-xs file:cursor-pointer"
           {...register("avatar")}
         />
-        <span className="auth-input-error">{errors.avatar?.message}</span>
+        <span className="text-[11px] text-error !pl-0.5 min-h-[16px]">
+          {errors.avatar?.message}
+        </span>
       </div>
 
-      {error && <div className="auth-error-box">{error}</div>}
+      {error && (
+        <div className="bg-error/10 border border-error/30 rounded-lg text-error text-xs !px-3 !py-2 w-full text-center">
+          {error}
+        </div>
+      )}
 
-      <Button className="auth-submit-btn" type="submit" loading={loading}>
+      <Button
+        className="w-full rounded-full border-none bg-gradient-to-r from-primary to-secondary text-primary-content text-xs font-extrabold uppercase tracking-widest !py-3 !mt-2 hover:opacity-90 active:scale-[0.97] transition disabled:opacity-60 disabled:cursor-not-allowed"
+        type="submit"
+        loading={loading}
+      >
         {loading ? "Creating account..." : "Sign Up"}
       </Button>
     </form>

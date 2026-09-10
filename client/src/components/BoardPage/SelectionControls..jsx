@@ -379,7 +379,6 @@ export default function SelectionControls({
                         </label>
                       </div>
 
-                      {/* Opacity */}
                       <span className="text-xs text-base-content/60">
                         Opacity
                       </span>

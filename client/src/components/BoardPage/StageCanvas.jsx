@@ -1,11 +1,10 @@
 import { Stage, Layer, Transformer, Arrow, Text, Group } from "react-konva";
 import { Image as KonvaImage } from "react-konva";
+import useImage from "use-image";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getTextPosition } from "./canvasHelper.js";
 import "./BoardStyle.css";
-import useImage from "use-image";
 
-// Helper function - user ID se consistent color generate karo
 const getUserColor = (userId) => {
   const colors = [
     "#4A90E2", // Blue
@@ -64,11 +63,9 @@ export default function StageCanvas({
       ref={stageRef}
       draggable={!pendingShapeType && tool !== "freehand" && tool !== "eraser"}
       onWheel={(e) => {
-        // ← yeh add karo, ZOOM ke liye
         e.evt.preventDefault();
         const stage = stageRef.current;
 
-        // Zoom hatao, sirf scroll karo
         const dx = e.evt.deltaX;
         const dy = e.evt.deltaY;
 
@@ -133,19 +130,19 @@ export default function StageCanvas({
               selectedArrowId === arrow.id
                 ? "#3b82f6"
                 : arrow.stroke || "#000000"
-            } // ← selected-hone-pe-highlight
+            }
             fill={arrow.stroke || "#000000"}
-            strokeWidth={selectedArrowId === arrow.id ? 3 : 2} // ← selected-hone-pe-mota
-            hitStrokeWidth={20} // ← click-area-badhao (freehand-jaisa)
+            strokeWidth={selectedArrowId === arrow.id ? 3 : 2}
+            hitStrokeWidth={20}
             onClick={() => {
               setSelectedArrowId(arrow.id);
               setSelectedId(null);
-            }} // ← naya
+            }}
           />
         ))}
         {shapes.map((el) => {
           const { Component, getProps } = SHAPE_CONFIG[el.type];
-          const isFreehand = el.type === "freehand"; // ← yeh-add-karo
+          const isFreehand = el.type === "freehand";
 
           return (
             <>
@@ -201,7 +198,6 @@ export default function StageCanvas({
           const cursorColor = getUserColor(userId);
           return (
             <Group key={userId} x={cursor.x} y={cursor.y}>
-              {/* Cursor arrow - proper SVG-like shape */}
               <KonvaImage
                 image={cursorImage}
                 width={30}
@@ -210,7 +206,6 @@ export default function StageCanvas({
                 offsetY={7}
               />
 
-              {/* Username label with background */}
               <Text
                 x={12}
                 y={16}

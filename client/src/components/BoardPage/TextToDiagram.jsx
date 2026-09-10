@@ -16,8 +16,6 @@ import {
   getExistingContentBounds,
 } from "./canvasHelper.js";
 
-// ---- Diagram-generation helpers -------------------------------------------
-
 const sanitizeShape = (shape) => {
   const isValidHex = (color) =>
     typeof color === "string" && /^#[0-9A-F]{6}$/i.test(color);
@@ -118,8 +116,6 @@ const DIAGRAM_TYPES = [
 
 const MAX_LENGTH = 1000;
 
-// ---- Component --------------------------------------------------------
-
 export default function TextToDiagram({
   onClose,
   onLoadingChange,
@@ -148,9 +144,7 @@ export default function TextToDiagram({
       notify.error("Description is required");
       return;
     }
-    // NOTE: `selectedType` (auto/flowchart/ER/...) is UI-only for now —
-    // wire it into textTodiagram(...) as an extra argument once the
-    // backend accepts a diagram-type hint.
+
     setLoading(true);
     try {
       const currentDescription = description;
@@ -163,7 +157,7 @@ export default function TextToDiagram({
         currentDescription,
         suggestedStartX,
         suggestedStartY,
-        selectedType
+        selectedType,
       );
       saveHistory();
 
@@ -186,9 +180,6 @@ export default function TextToDiagram({
       setArrows((prev) => [...prev, ...newArrows]);
       setNewlyGeneratedShapes(Date.now());
 
-      // Close only once the arrow-snap effect below has had a chance to run
-      // and fitStageToContent has framed the new shapes — closing right
-      // away would unmount this component (and its effect) too early.
       setTimeout(() => {
         fitStageToContent(allShapes, stageRef.current, stageSize);
         setLoading(false);
@@ -234,7 +225,6 @@ export default function TextToDiagram({
 
   return (
     <>
-      {/* Diagram type grid */}
       <h4 className="font-semibold text-sm mb-2.5! px-4!">
         Select Diagram Type
       </h4>
@@ -283,7 +273,6 @@ export default function TextToDiagram({
         </div>
       </div>
 
-      {/* Footer action */}
       <div className="flex items-end justify-end p-4!">
         <button
           type="button"

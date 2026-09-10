@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { Input, Button } from "../";
 import { useState } from "react";
-import api from "../../services/api";
-import {notify} from "../../utils/toast.jsx";
+import api from "../../services/api.js";
+import { notify } from "../../utils/toast.jsx";
 export default function ChangePassword({ onClose }) {
   const { handleSubmit, register } = useForm();
   const [loading, setLoading] = useState(false);

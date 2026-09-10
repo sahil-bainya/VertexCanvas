@@ -7,18 +7,19 @@ import {
   NotebookText,
   ImageDown,
   Download,
- 
   Pencil,
   ChevronLeft,
   BrushCleaning,
   Eraser,
   Link,
   MousePointer2,
+  Menu,
 } from "lucide-react";
 import "./Toolbar.css";
 import { ToggleTheme } from "../";
 import PendingRequestsButton from "./PendingRequestsButton.jsx";
 import AiHelpPannel from "./AiHelpPannel.jsx";
+
 export default function Toolbar({
   loading,
   stageRef,
@@ -85,6 +86,7 @@ export default function Toolbar({
           </h2>
         )}
       </div>
+
       <ul className="menu menu-horizontal bg-base-300 rounded-box mt-6 flex gap-3 p-1! border border-primary/40">
         <li>
           <div className="tooltip" data-tip="Selection">
@@ -183,6 +185,7 @@ export default function Toolbar({
           </div>
         </li>
       </ul>
+
       <div className="flex flex-row gap-1.5 flex-wrap">
         <AiHelpPannel
           className={`btn btn-sm btn-ghost  bg-base-300 rounded-xl py-5! px-3! ${theme === "dark" && "border border-primary/40"}`}
@@ -197,28 +200,7 @@ export default function Toolbar({
           stageRef={stageRef}
           stageSize={stageSize}
         />
-        <div
-          className="dropdown dropdown-end tooltip tooltip-bottom"
-          data-tip="Export"
-        >
-          <button
-            className={`btn btn-sm btn-ghost  bg-base-300 rounded-xl py-5! px-3! ${theme === "dark" && "border border-primary/40"}`}
-          >
-            <ImageDown size={18} />
-          </button>
-          <ul className="dropdown-content menu bg-base-200 rounded-box w-max p-2!">
-            <li>
-              <button onClick={exportPNG} className="btn btn-s px-2!">
-                <Download /> Export PNG
-              </button>
-            </li>
-            <li>
-              <button onClick={exportPDF} className="btn btn-s px-2!">
-                <Download /> Export PDF
-              </button>
-            </li>
-          </ul>
-        </div>
+
         <div className="tooltip tooltip-bottom" data-tip="Notes">
           <button
             className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3! ${notesShowing && "hidden"} ${theme === "dark" && "border border-primary/40"}`}
@@ -229,22 +211,7 @@ export default function Toolbar({
             <NotebookText size={18} />
           </button>
         </div>
-        <div className="tooltip tooltip-bottom" data-tip="Erase whole canvas">
-          <button
-            className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!  ${theme === "dark" && "border border-primary/40"}`}
-            onClick={eraseWholeCanvas}
-          >
-            <BrushCleaning size={18} />
-          </button>
-        </div>
-        <div className="tooltip tooltip-bottom" data-tip="Invite">
-          <button
-            className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!  ${theme === "dark" && "border border-primary/40"}`}
-            onClick={() => setShowCollabModal(true)}
-          >
-            <Link size={18} /> Collab
-          </button>
-        </div>
+
         <div className="tooltip tooltip-bottom" data-tip="Notification">
           <PendingRequestsButton
             style={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5!  px-3! ${theme === "dark" && "border border-primary/40"}`}
@@ -256,10 +223,59 @@ export default function Toolbar({
             }}
           />
         </div>
-        <div className="tooltip tooltip-bottom" data-tip="Change theme">
-          <ToggleTheme
-            style={`${theme === "dark" && "border border-primary/40 "} btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3!`}
-          />
+
+        <div className="dropdown dropdown-end">
+          <div
+            tabIndex={0}
+            role="button"
+            className={`btn btn-sm btn-ghost bg-base-300 rounded-xl py-5! px-3! ${theme === "dark" && "border border-primary/40"}`}
+          >
+            <Menu size={18} />
+          </div>
+
+          <ul
+            tabIndex={0}
+            className={`dropdown-content menu bg-base-200 rounded-xl z-1 w-44 p-2! mt-2! shadow-lg gap-1 ${theme === "dark" && "border border-primary/40"}`}
+          >
+            <li>
+              <a onClick={eraseWholeCanvas} className="p-2! rounded-lg">
+                <BrushCleaning size={18} /> Clean Canvas
+              </a>
+            </li>
+
+            <li>
+              <ToggleTheme style=" rounded-lg flex gap-2 p-2!" text="Themes" />
+            </li>
+
+            <li>
+              <details>
+                <summary className="p-2! rounded-lg">
+                  <ImageDown size={18} /> Export
+                </summary>
+                <ul className="p-2! rounded-lg">
+                  <li>
+                    <a onClick={exportPNG} className="p-2! rounded-lg">
+                      <Download size={16} /> Export PNG
+                    </a>
+                  </li>
+                  <li>
+                    <a onClick={exportPDF} className="p-2! rounded-lg">
+                      <Download size={16} /> Export PDF
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+
+            <li>
+              <a
+                onClick={() => setShowCollabModal(true)}
+                className="p-2! rounded-lg"
+              >
+                <Link size={18} /> Collab
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

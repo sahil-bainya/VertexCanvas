@@ -72,40 +72,40 @@ export default function AiSuggestionPanel({
   };
 
   return loading ? (
- <div
-  ref={panelRef}
-  style={{ left: position.x, top: position.y }}
-  className="fixed z-50 border border-base-300 w-[90vw] max-w-sm max-h-[70vh] bg-base-100 rounded-xl shadow-xl flex flex-col px-3! pt-3!"
->
-  {/* Drag handle — same */}
-  <div
-    onMouseDown={handleMouseDown}
-    className="flex items-center justify-center py-1 cursor-grab active:cursor-grabbing border-b border-base-300 select-none -mx-3"
-  >
-    <GripHorizontal size={16} className="text-base-content/30" />
-  </div>
+    <div
+      ref={panelRef}
+      style={{ left: position.x, top: position.y }}
+      className="fixed z-50 border border-base-300 w-[90vw] max-w-sm max-h-[70vh] bg-base-100 rounded-xl shadow-xl flex flex-col px-3! pt-3!"
+    >
+      {/* Drag handle — same */}
+      <div
+        onMouseDown={handleMouseDown}
+        className="flex items-center justify-center py-1 cursor-grab active:cursor-grabbing border-b border-base-300 select-none -mx-3"
+      >
+        <GripHorizontal size={16} className="text-base-content/30" />
+      </div>
 
-  {/* Header skeleton — same height as actual header */}
-  <div className="flex justify-between items-center p-4">
-    <div className="skeleton h-8 w-40 rounded-lg" />
-    <div className="skeleton h-8 w-8 rounded-full" />
-  </div>
+      {/* Header skeleton — same height as actual header */}
+      <div className="flex justify-between items-center p-4">
+        <div className="skeleton h-8 w-40 rounded-lg" />
+        <div className="skeleton h-8 w-8 rounded-full" />
+      </div>
 
-  <div className="divider my-0" />
+      <div className="divider my-0" />
 
-  {/* Content skeletons — same padding as actual content */}
-  <div className="flex-1 overflow-y-auto px-4 flex flex-col gap-3 pb-3">
-    <div className="skeleton h-6 w-3/4 rounded-lg" />
-    <div className="skeleton h-20 w-full rounded-lg" />
-    <div className="skeleton h-20 w-full rounded-lg" />
-    <div className="skeleton h-20 w-full rounded-lg" />
-  </div>
+      {/* Content skeletons — same padding as actual content */}
+      <div className="flex-1 overflow-y-auto px-4 flex flex-col gap-3 pb-3">
+        <div className="skeleton h-6 w-3/4 rounded-lg" />
+        <div className="skeleton h-20 w-full rounded-lg" />
+        <div className="skeleton h-20 w-full rounded-lg" />
+        <div className="skeleton h-20 w-full rounded-lg" />
+      </div>
 
-  {/* Footer skeleton — same as "Add to Notes" */}
-  <div className="m-3!">
-    <div className="skeleton h-8 w-32 rounded-2xl" />
-  </div>
-</div>
+      {/* Footer skeleton — same as "Add to Notes" */}
+      <div className="m-3!">
+        <div className="skeleton h-8 w-32 rounded-2xl" />
+      </div>
+    </div>
   ) : (
     <div
       ref={panelRef}

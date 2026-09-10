@@ -24,7 +24,7 @@ export default function RequestNotification({ request, onHandled }) {
       notify.success("Access granted");
       onHandled(request.userId);
     } catch (err) {
-      notify.error(`Failed to accept: ${err}`);
+      notify.error(`Failed to accept: ${err?.response?.data?.message}`);
     } finally {
       setLoading(false);
       setActioning(null);
@@ -38,10 +38,10 @@ export default function RequestNotification({ request, onHandled }) {
       await api.post(`/boards/${request.boardId}/reject-request`, {
         userId: request.userId,
       });
-      notify.success("Request rejected");
+      notify.info("Request rejected");
       onHandled(request.userId);
     } catch (err) {
-      notify.error(`Failed to reject: ${err}`);
+      notify.error(`Failed to reject: ${err?.response?.data?.message}`);
     } finally {
       setLoading(false);
       setActioning(null);

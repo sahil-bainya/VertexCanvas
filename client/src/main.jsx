@@ -1,21 +1,22 @@
 // import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import { Provider } from "react-redux";
-import App from "./App.jsx";
 import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import "./index.css";
+import App from "./App.jsx";
 import store from "./store/store.js";
 import { AuthLayout } from "./components";
 import { AuthPage, BoardPage, DashboardPage, SettingsPage } from "./pages";
-import { Toaster } from "react-hot-toast";
 import SocketProvider from "./globalSocket/SocketProvider.jsx";
 
 const savedTheme = localStorage.getItem("theme") || "default";
 document.documentElement.setAttribute("data-theme", savedTheme);
+
 const router = createBrowserRouter([
   {
     path: "/",

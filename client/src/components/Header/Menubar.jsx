@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import LogoutBtn from "./LogoutButton";
-import { useSelector } from "react-redux";
 import { Settings, LayoutDashboard } from "lucide-react";
-import {ToggleTheme} from "../"
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import LogoutBtn from "./LogoutButton.jsx";
+import { ToggleTheme } from "../";
 export default function Menubar() {
   const user = useSelector((state) => state.auth.user);
   return (
@@ -22,7 +22,7 @@ export default function Menubar() {
         </Link>
       </li>
       <li>
-        <ToggleTheme text="Appearance" style="flex items-center gap-1.5"/>
+        <ToggleTheme text="Appearance" style="flex items-center gap-1.5" />
       </li>
       <li className="rounded-lg px-4! py-2! ">
         <LogoutBtn />

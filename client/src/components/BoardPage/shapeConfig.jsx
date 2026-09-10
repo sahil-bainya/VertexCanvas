@@ -6,7 +6,8 @@ import {
   Minus,
   Diamond as DiamondIcon,
   Ellipse as EllipseIcon,
-  Triangle,Pencil 
+  Triangle,
+  Pencil,
 } from "lucide-react";
 
 import { Rect, Circle, Text, Arrow, Line, Ellipse } from "react-konva";
@@ -71,28 +72,28 @@ export const SHAPE_CONFIG = {
     getProps: (el) => ({ radiusX: el.radiusX, radiusY: el.radiusY }),
   },
   diamond: {
-  icon: <DiamondIcon size={18} />,
-  defaults: {
-    points: [0, -40, 40, 0, 0, 40, -40, 0, 0, -40],
-    fill: "",    
-    stroke: "#000000",
-    
-    strokeWidth: 2,
-    text: "",
-    closed: true,
+    icon: <DiamondIcon size={18} />,
+    defaults: {
+      points: [0, -40, 40, 0, 0, 40, -40, 0, 0, -40],
+      fill: "",
+      stroke: "#000000",
+
+      strokeWidth: 2,
+      text: "",
+      closed: true,
+    },
+    Component: Line,
+    datatip: "Diamond",
+    getProps: (el) => ({
+      x: el.x,
+      y: el.y,
+      points: el.points,
+      closed: el.closed,
+      fill: el.fill,
+      stroke: el.stroke,
+      strokeWidth: el.strokeWidth || 2,
+    }),
   },
-  Component: Line,
-  datatip: "Diamond",
-  getProps: (el) => ({
-    x: el.x,
-    y: el.y,
-    points: el.points,
-    closed: el.closed,
-    fill: el.fill,
-    stroke: el.stroke,
-    strokeWidth: el.strokeWidth || 2,
-  }),
-},
   roundedRect: {
     icon: <Square size={18} className="rounded-md" />,
     defaults: {
@@ -138,17 +139,22 @@ export const SHAPE_CONFIG = {
     getProps: (el) => ({ points: el.points, closed: el.closed }),
   },
   freehand: {
-  icon: <Pencil size={18} />,
-  defaults: {
-    points: [],  // ← khali-array-se-shuru-hoga, drawing-ke-dauran-fill-hoga
-    stroke: "#000000",
-    strokeWidth: 3,
-    lineCap: "round",
-    lineJoin: "round",
-    text: "",  // (label-ki-zarurat-nahi-iss-shape-ko, lekin-consistency-ke-liye-rakh-sakte-ho)
+    icon: <Pencil size={18} />,
+    defaults: {
+      points: [],
+      stroke: "#000000",
+      strokeWidth: 3,
+      lineCap: "round",
+      lineJoin: "round",
+      text: "",
+    },
+    Component: Line,
+    datatip: "Pencil",
+    getProps: (el) => ({
+      points: el.points,
+      strokeWidth: el.strokeWidth,
+      lineCap: el.lineCap,
+      lineJoin: el.lineJoin,
+    }),
   },
-  Component: Line,  // ← Konva-ka-Line-hi-use-hoga, jaisa-arrow/diamond-mein-tha
-  datatip: "Pencil",
-  getProps: (el) => ({ points: el.points, strokeWidth: el.strokeWidth, lineCap: el.lineCap, lineJoin: el.lineJoin }),
-},
 };

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 
 export default function ContextPanel({ shape, onClose, onSave }) {
-   const theme = useSelector((state) => state.theme.mode);
+  const theme = useSelector((state) => state.theme.mode);
   const [notes, setNotes] = useState(shape.context?.notes || "");
   const [links, setLinks] = useState(shape.context?.links || []);
   const [code, setCode] = useState(shape.context?.code || "");
@@ -103,9 +103,10 @@ export default function ContextPanel({ shape, onClose, onSave }) {
               language="javascript"
               placeholder="Write code here"
               onChange={(e) => setCode(e.target.value)}
-              data-color-mode={(theme === "light" || theme==="autumn") ? "light" : "dark"}
+              data-color-mode={
+                theme === "light" || theme === "autumn" ? "light" : "dark"
+              }
               className="h-full font-mono text-lg! rounded-md"
-              
             />
           </div>
         </div>

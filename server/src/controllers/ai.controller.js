@@ -307,11 +307,27 @@ const messCleanup = asyncHandler(async (req, res) => {
   }
 
   const prompt = `
-You are a diagram analysis expert.
-Analyze these shapes and return their logical relationships.
+You are a diagram analysis expert. Analyze these shapes and determine their 
+logical relationships to help organize a messy diagram.
 
-SHAPES:
-${JSON.stringify(shapes.map((s) => ({ id: s.id, label: s.text || s.type })))}
+SHAPES (with full details):
+${JSON.stringify(
+  shapes.map((s) => ({
+    id: s.id,
+    label: s.text || s.type,
+    type: s.type,
+    position: { x: Math.round(s.x), y: Math.round(s.y) },
+    size: s.width
+      ? { width: s.width, height: s.height }
+      : s.radius
+        ? { radius: s.radius }
+        : s.radiusX
+          ? { radiusX: s.radiusX, radiusY: s.radiusY }
+          : null,
+  })),
+  null,
+  2,
+)}
 
 EXISTING CONNECTIONS:
 ${JSON.stringify(
@@ -325,20 +341,32 @@ ${JSON.stringify(
       toLabel: to?.text || to?.type,
     };
   }),
+  null,
+  2,
 )}
 
-Rules:
-- Keep ALL existing connections
-- Add missing logical relationships if any
-- Only use ids from the shapes list above
-- Do not create connections to non-existent shapes
+YOUR TASK:
+1. Keep ALL existing connections (do not remove any)
+2. Analyze shape labels and spatial positions
+3. Add missing logical relationships between shapes
+4. Shapes that are spatially close AND semantically related should be connected
+5. Consider typical diagram patterns:
+   - Flowcharts: sequential steps
+   - Architecture: layers (frontend → backend → database)
+   - ER diagrams: entities and their relationships
+
+RULES:
+- Only use IDs from the shapes list above
+- Do NOT create connections to non-existent shapes
+- Do NOT create duplicate connections
+- If shapes have no logical relationship, do not force a connection
+- Total nodes must be exactly ${shapes.length}
 
 Return ONLY this JSON, nothing else:
 {
   "nodes": [{ "id": "exact_shape_id", "label": "shape_label" }],
   "edges": [{ "from": "exact_id", "to": "exact_id" }]
 }
-Total nodes must be exactly ${shapes.length}.
 `;
 
   const response = await groq.chat.completions.create({
@@ -346,13 +374,15 @@ Total nodes must be exactly ${shapes.length}.
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
+
   if (!response) {
     throw new ApiError(500, "Groq error");
   }
+
   const result = JSON.parse(response.choices[0].message.content);
   return res
     .status(200)
-    .json(new ApiResponse(200, result, "Logical relations indentified"));
+    .json(new ApiResponse(200, result, "Logical relations identified"));
 });
 
 const textToDiagram = asyncHandler(async (req, res) => {

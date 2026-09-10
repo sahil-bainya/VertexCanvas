@@ -1,13 +1,13 @@
-import "./App.css";
-import { Header, Footer } from "./components";
-import { Outlet, useLocation } from "react-router-dom";
-import api from "./services/api";
-import { setUser, clearUser } from "./store/authSlice.js";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { Outlet, useLocation } from "react-router-dom";
+import "./App.css";
+import { Header, Footer } from "./components";
+import api from "./services/api";
+import { setUser, clearUser } from "./store/authSlice.js";
 
 function App() {
-  const location = useLocation(); // gives the current url
+  const location = useLocation();
   const dispatch = useDispatch();
   useEffect(() => {
     api

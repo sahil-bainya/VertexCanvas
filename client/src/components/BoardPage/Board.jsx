@@ -141,12 +141,30 @@ export default function Board() {
   const handleCleanup = async () => {
     setLoading(true);
     try {
-      const result = await messCleanup(shapes, arrows);
-      const elkNodes = await getElkPositions(shapes, result.edges);
-      console.log(shapes);
+      const freehandShapes = shapes.filter((s) => s.type === "freehand");
+      const properShapes = shapes.filter((s) => s.type !== "freehand");
+
+      if (properShapes.length === 0) {
+        notify.error("No proper shapes to cleanup");
+        return;
+      }
+
+      if (freehandShapes.length > 0) {
+        notify.error(
+          `${freehandShapes.length} freehand drawing(s) will not be moved`,
+        );
+      }
+
+      const result = await messCleanup(properShapes, arrows);
+
+      const elkNodes = await getElkPositions(properShapes, result.edges);
+
       const updatedShapes = shapes.map((shape) => {
+        if (shape.type === "freehand") return shape;
+
         const elkNode = elkNodes.find((n) => n.id === shape.id);
         if (!elkNode) return shape;
+
         return {
           ...shape,
           x:
@@ -157,11 +175,12 @@ export default function Board() {
               : elkNode.y,
         };
       });
-      console.log(updatedShapes);
+
       setShapes(updatedShapes);
       setPendingCleanup(true);
     } catch (error) {
       console.log(error);
+      notify.error("Cleanup failed");
     } finally {
       setLoading(false);
     }
@@ -334,7 +353,6 @@ export default function Board() {
         </div>
       )}
 
-      {/* CANVAS AREA — baaki poori height */}
       <div className="relative flex-1 overflow-hidden">
         {/* Konva Canvas */}
         <div
@@ -388,7 +406,7 @@ export default function Board() {
           />
         )}
 
-        {/* AI Suggestion Panel — mid left, canvas ke andar */}
+        {/* AI Suggestion Panel — mid left*/}
         {!fullScreen && aiPanelOpen && (
           <AisuggestionPannel
             suggestions={aiResponse?.suggestions}
@@ -410,7 +428,7 @@ export default function Board() {
           />
         )}
 
-        {/* ContextPanel — bottom center, SelectionControls ke upar */}
+        {/* ContextPanel — bottom center */}
         {!fullScreen && contextShape && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 w-[35vw] max-w-xl max-h-[60vh]">
             {" "}

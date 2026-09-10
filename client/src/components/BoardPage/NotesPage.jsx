@@ -16,11 +16,9 @@ export default function NotesPage({
     setAdded(true);
 
     if (editingNote) {
-      // Edit existing note
       await updateNote(editingNote, note);
       seteditingNote(null);
     } else {
-      // Add new note
       const newNote = {
         id: crypto.randomUUID(),
         text: note,
@@ -35,7 +33,6 @@ export default function NotesPage({
   };
   return (
     <div className="w-full flex flex-col gap-3 p-4! bg-base-100 h-screen">
-      {/* Header */}
       <div
         className="flex justify-between items-center"
         onClick={() => {
@@ -55,7 +52,6 @@ export default function NotesPage({
       </div>
       <div className="divider " />
 
-      {/* Empty state */}
       {boardNotes.length === 0 && (
         <p className="text-sm text-base-content/50 text-center py-8">
           No notes yet — AI suggestions and manual notes will appear here.
@@ -115,7 +111,6 @@ export default function NotesPage({
         ))}
       </div>
 
-      {/* Add note */}
       <div
         className="flex flex-col gap-2 mt-2 "
         onClick={(e) => e.stopPropagation()}

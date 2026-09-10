@@ -15,7 +15,7 @@ export function useSocket(
   onFreehandPoints,
   onCursorMove,
   onUserLeft,
-  onCleanCanvas
+  onCleanCanvas,
 ) {
   const { socketRef, isConnected } = useGlobalSocketContext();
 
@@ -24,10 +24,8 @@ export function useSocket(
 
     const socket = socketRef.current;
 
-    // ===== JOIN-BOARD =====
     socket.emit("join-board", boardId);
 
-    // ===== LISTENERS — named-functions-banaye, cleanup-ke-liye-zaroori =====
     const handleShapeMoved = ({ shapeId, x, y, rotation }) => {
       onShapeMoved({ shapeId, x, y, rotation });
     };
@@ -59,16 +57,16 @@ export function useSocket(
       onFreehandPoints(data);
     };
 
-    const handleCleanCanvas=()=>{
+    const handleCleanCanvas = () => {
       onCleanCanvas();
-    }
+    };
     const handleCursorMove = (data) => {
       onCursorMove(data);
     };
     const handleUserLeft = (data) => {
       onUserLeft(data);
     };
-   
+
     socket.on("shape-moved", handleShapeMoved);
     socket.on("shape-added", handleShapeAdded);
     socket.on("shape-deleted", handleShapeDeleted);
@@ -83,7 +81,6 @@ export function useSocket(
     socket.on("cursor-move-binary", handleCursorMove);
     socket.on("user-left", handleUserLeft);
 
-    // ===== CLEANUP — sirf-LISTENERS-hatao, DISCONNECT-NAHI =====
     return () => {
       socket.off("shape-moved", handleShapeMoved);
       socket.off("shape-added", handleShapeAdded);

@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import { useState, useRef, useEffect } from "react";
-import api from "../../services/api.js";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import api from "../../services/api.js";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getShapeCenter, getShapeEdgePoint } from "./canvasHelper.js";
-import { useSelector } from "react-redux";
 import { useSocket } from "./useSocket.js";
 import { notify } from "../../utils/toast.jsx";
 export function useBoard() {
@@ -40,7 +40,7 @@ export function useBoard() {
   const [pendingShapeType, setPendingShapeType] = useState(null);
 
   const [isDrawing, setIsDrawing] = useState(false);
-  const currentFreehandId = useRef(null); // jo-shape-abhi-draw-ho-rahi-hai, uski-id-yaad-rakhne-ke-liye
+  const currentFreehandId = useRef(null);
   const [pencilColor, setPencilColor] = useState(getDefaultStrokeColor());
   const [pencilStrokeWidth, setPencilStrokeWidth] = useState(3);
 
@@ -326,6 +326,7 @@ export function useBoard() {
     setArrows([]);
     setShapes([]);
   };
+
   const socketRef = useSocket(
     boardId,
     handleRemoteShapeMoved,
@@ -767,18 +768,21 @@ export function useBoard() {
     setBoardNotes(updatedNotes);
     await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
   };
+
   const updateNote = async (noteId, updatedText) => {
-  const updatedNotes = boardNotes.map((n) =>
-    n.id === noteId ? { ...n, text: updatedText } : n
-  );
-  setBoardNotes(updatedNotes);
-  await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
-};
+    const updatedNotes = boardNotes.map((n) =>
+      n.id === noteId ? { ...n, text: updatedText } : n,
+    );
+    setBoardNotes(updatedNotes);
+    await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
+  };
+
   const removeNotes = async (notesid) => {
     const updatedNotes = boardNotes.filter((notes) => notes.id !== notesid);
     setBoardNotes(updatedNotes);
     await api.patch(`/boards/${id}/notes`, { boardNotes: updatedNotes });
   };
+
   const deleteArrow = (arrowId) => {
     saveHistory();
     setArrows((prev) => prev.filter((a) => a.id !== arrowId));
@@ -791,6 +795,7 @@ export function useBoard() {
 
   const [boardAccess, setBoardAccess] = useState(null); // null = loading
   const [pendingRequests, setPendingRequests] = useState([]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -1066,8 +1071,10 @@ export function useBoard() {
     navigator.clipboard.writeText(inviteLink);
     notify.success("Link copied!");
   };
+
   return {
-    pencilColor,updateNote,
+    pencilColor,
+    updateNote,
     remoteCursors,
     startCursorTracking,
     updateCursorPosition,
@@ -1136,6 +1143,8 @@ export function useBoard() {
     inviteUser,
     boardId,
     boardAccess,
-    eraseWholeCanvas,pendingRequests, setPendingRequests
+    eraseWholeCanvas,
+    pendingRequests,
+    setPendingRequests,
   };
 }

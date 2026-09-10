@@ -1,4 +1,3 @@
-// src/hooks/useGlobalSocket.js
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
@@ -22,10 +21,7 @@ export function useGlobalSocket() {
     });
 
     socketRef.current.on("access-requested", (data) => {
-      // Toast notification
-      notify.success(`${data.requesterName} wants to access your board`);
-
-      // Ya custom event se UI update karo
+      notify.info(`${data.requesterName} wants to access your board`);
       window.dispatchEvent(new CustomEvent("access-request", { detail: data }));
     });
 
@@ -45,9 +41,8 @@ export function useGlobalSocket() {
     });
 
     socketRef.current.on("removed-from-board", ({ boardId }) => {
-      // Sirf tabhi redirect karo agar user abhi usi board pe hai
       if (window.location.pathname.includes(boardId)) {
-        notify.error("You were removed from this board");
+        notify.info("You were removed from this board");
         setTimeout(() => {
           window.location.href = "/dashboard";
         }, 1000);

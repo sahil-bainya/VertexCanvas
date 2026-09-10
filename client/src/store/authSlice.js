@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-// for storing that current user is logged in or not.
+
 const initialState = {
   status: false,
   user: null,
@@ -23,5 +23,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser } = authSlice.actions; // these are actions , not reducers.
+export const { setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;

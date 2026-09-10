@@ -14,7 +14,7 @@ export default function RequestAccessScreen({
       setRequestSent(true);
       notify.success("Request sent!");
     } catch (err) {
-      notify.error(`Failed to send request ${err}`);
+      notify.error(`Failed to send request ${err?.response?.data?.message}`);
     }
   };
 
