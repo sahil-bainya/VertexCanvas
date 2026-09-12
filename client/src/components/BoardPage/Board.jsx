@@ -15,6 +15,7 @@ import { Maximize, Minimize } from "lucide-react";
 import CollabModal from "./CollabModel.jsx";
 import RequestAccessScreen from "./RequestAccessScreen.jsx";
 import { useParams } from "react-router-dom";
+import DisplayCode from "./DisplayCode.jsx";
 export default function Board() {
   const {
     eraseWholeCanvas,
@@ -97,6 +98,10 @@ export default function Board() {
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
+  const [codeDrawerOpen, setCodeDrawerOpen] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [generatedLang, setGeneratedLang] = useState("");
+
   const [grid, setGrid] = useState(false);
 
   const { id } = useParams();
@@ -129,7 +134,63 @@ export default function Board() {
     setAiLoading(true);
     try {
       const result = await architectureAssist(shapes, arrows);
+      //       const result = {
+      //         objectCodeType: "pseudocode",
+      //         codeable: true,
+      //         detailedAnalysis: `Start: Begin the process.
+
+      // 1. Input number:
+      //    Receive an integer from the user.
+
+      // 2. Decision point – Is even?:
+      //    Evaluate (number % 2 === 0).
+      //    - If true, flow goes to the "Even" block.
+      //    - If false, flow goes to the "Odd" block.
+
+      // 3. Even block:
+      //    Execute logic for even numbers (e.g., print "Number is even").
+
+      // 4. Odd block:
+      //    Execute logic for odd numbers (e.g., print "Number is odd").
+
+      // 5. End:
+      //    Terminate the program.
+
+      // Edge cases:
+      // The diagram does not account for non-numeric input, negative numbers, or zero, all of which should be handled in a robust implementation.`,
+
+      //         diagramType: "flowchart",
+
+      //         suggestions: [
+      //           {
+      //             type: "improvement",
+      //             title: "Handle invalid input",
+      //             description:
+      //               "Add validation to ensure the user enters a valid number.",
+      //           },
+      //           {
+      //             type: "improvement",
+      //             title: "Handle edge cases",
+      //             description: "Explicitly consider negative numbers and zero.",
+      //           },
+      //           {
+      //             type: "clarity",
+      //             title: "Improve output",
+      //             description:
+      //               "Clearly display whether the entered number is even or odd.",
+      //           },
+      //           {
+      //             type: "robustness",
+      //             title: "Add error handling",
+      //             description: "Handle non-numeric or empty input gracefully.",
+      //           },
+      //         ],
+
+      //         summary:
+      //           "A flowchart that reads a number, determines if it is even or odd, outputs the result, and then terminates.",
+      //       };
       setAiresponse(result);
+      console.log(result);
       setCanvasChangedSinceAI(false);
     } catch (error) {
       notify.error(error.message);
@@ -409,11 +470,12 @@ export default function Board() {
         {/* AI Suggestion Panel — mid left*/}
         {!fullScreen && aiPanelOpen && (
           <AisuggestionPannel
-            suggestions={aiResponse?.suggestions}
-            summary={aiResponse?.summary}
-            diagramType={aiResponse?.diagram_type}
+            aiResponse={aiResponse}
             onClose={() => setAiPanelOpen(false)}
             loading={aiLoading}
+            setCodeDrawerOpen={setCodeDrawerOpen}
+            setGeneratedCode={setGeneratedCode}
+            setGeneratedLang={setGeneratedLang}
             onAddToNotes={async () => {
               const newNote = {
                 id: crypto.randomUUID(),
@@ -425,6 +487,23 @@ export default function Board() {
               };
               addToNotes(newNote);
             }}
+          />
+        )}
+        {!fullScreen && (
+          <DisplayCode
+            isOpen={codeDrawerOpen}
+            code={generatedCode}
+            language={generatedLang}
+            onAddToNotes={async () => {
+              const newNote = {
+                id: crypto.randomUUID(),
+                text: `${generatedLang}\n${generatedCode}\n`,
+                source: "Code",
+                createdAt: new Date().toISOString(),
+              };
+              addToNotes(newNote);
+            }}
+            onClose={() => setCodeDrawerOpen(false)}
           />
         )}
 

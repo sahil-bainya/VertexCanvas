@@ -58,7 +58,7 @@ export default function Dashboard() {
     try {
       const res = await api.post("/boards", { title: "Untitled Whiteboard" });
       dispatch(addBoard(res.data.data.board));
-      navigate(`/board/${res.data.data.board._id}`);
+      // navigate(`/board/${res.data.data.board._id}`);
     } catch (err) {
       notify.error(
         err?.response?.data?.message ||
@@ -97,7 +97,10 @@ export default function Dashboard() {
   return (
     <div className=" py-16!">
       <div className=" flex justify-end px-6! py-4!">
-        <button className="btn btn-soft btn-primary px-2!" onClick={handleCreate}>
+        <button
+          className="btn btn-soft btn-primary px-2!"
+          onClick={handleCreate}
+        >
           Create New File
         </button>
       </div>

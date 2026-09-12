@@ -575,8 +575,11 @@ export function useBoard() {
         context: { notes: "", links: [], code: "" },
       },
     ]);
-    console.log("add shape moved called ", id);
-    setSelectedId(id);
+    if (type === "text") {
+      setTimeout(() => {
+        handleTextDblClick(id);
+      }, 100);
+    }
     if (socketRef.current) {
       socketRef.current.emit("shape-added", {
         boardId: boardId,

@@ -10,16 +10,33 @@ import {
 } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import { getBoardAccess } from "../utils/checkOwnership.js";
+
+const BOARD_LIMITS = {
+  free: 20,
+  pro: 100,
+  enterprise: Infinity,
+};
+
 const createBoard = asyncHandler(async (req, res) => {
   const { title } = req.body;
   const owner = req.user._id;
+  const user = await User.findById(owner);
+  const limit = BOARD_LIMITS[user.plan || "free"];
+
+  const boardCount = await Board.countDocuments({ owner });
+
+  if (boardCount >= limit) {
+    throw new ApiError(400, `File limit reached. Upgrade to create more.`);
+  }
   const board = await Board.create({
     title: title || undefined,
     owner,
+    ownerName: req.user.name,
   });
   if (!board) {
     throw new ApiError(500, "Error occur while creating board");
   }
+
   return res
     .status(201)
     .json(new ApiResponse(201, { board }, "Board created succesfully"));
@@ -34,7 +51,7 @@ const getAllBoards = asyncHandler(async (req, res) => {
   // req.user already available from auth middleware
   const boardsWithOwnerName = boards.map((board) => ({
     ...board,
-    ownerName:req.user.name,
+    ownerName: req.user.name,
   }));
 
   return res

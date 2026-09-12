@@ -10,6 +10,14 @@ const messCleanup = async (shapes, arrows) => {
   return response.data.data;
 };
 
+const generateCode = async (detailed_analysis, codeType, selectedLanguage) => {
+  const response = await api.post("/ai/generate-code", {
+    detailed_analysis: detailed_analysis,
+    code_type: codeType,
+    language: selectedLanguage,
+  });
+  return response.data.data;
+};
 const textTodiagram = async (
   description,
   startX = 100,
@@ -24,4 +32,4 @@ const textTodiagram = async (
   });
   return response.data.data;
 };
-export { architectureAssist, messCleanup, textTodiagram };
+export { architectureAssist, messCleanup, textTodiagram, generateCode };

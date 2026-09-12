@@ -31,7 +31,7 @@ export const SHAPE_CONFIG = {
   },
   text: {
     icon: <Type size={18} />,
-    defaults: { text: "Hello", fontSize: 24, fill: "" },
+    defaults: { text: "", fontSize: 24, fill: "" },
     Component: Text,
     datatip: "Text",
     getProps: (el) => ({ text: el.text, fontSize: el.fontSize }),

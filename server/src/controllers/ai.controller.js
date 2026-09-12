@@ -8,6 +8,7 @@ const AI_MODELS = {
   assist: "openai/gpt-oss-120b",
   cleanup: "openai/gpt-oss-20b",
   textToDiagram: "openai/gpt-oss-120b",
+  generateCode: "openai/gpt-oss-120b",
 };
 
 const getDiagramTypeInstructions = (selectedType) => {
@@ -240,17 +241,50 @@ STEP 1 — Detect diagram type:
 - general → if it does not fit any specific type
 - minimal → ONLY if there is truly nothing to analyze (a single shape with no label, an unconnected line, or empty/meaningless content)
 
-STEP 2 — Based on detected type, provide relevant suggestions:
+STEP 2 — Detect if diagram is CODEABLE:
+A diagram is CODEABLE if it can be converted into actual runnable code or schema.
+Mark "codeable": true for:
+- ER diagrams → SQL schema
+- Flowcharts with clear algorithm → pseudo-code or actual code
+- Architecture diagrams with clear data flow → API/backend boilerplate
+
+Mark "codeable": false for:
+- Mind maps, vague diagrams, general/minimal diagrams
+
+STEP 3 — Generate DETAILED ANALYSIS:
+If diagram is codeable (flowchart or er_diagram especially), provide a DETAILED
+breakdown of the diagram's logic that can be used as input to generate code later.
+
+For FLOWCHART diagrams, detailed_analysis should describe:
+- Every step in sequence with its action
+- Every decision point with its condition (yes/no branches)
+- Loop structures (if any)
+- Start and end points
+- Edge cases the logic should handle
+
+For ER_DIAGRAM, detailed_analysis should describe:
+- Every entity with its attributes (infer from labels if not explicit)
+- Primary keys (inferred or marked as inferred)
+- Foreign keys and relationships (1:1, 1:N, M:N)
+- Cardinality of relationships
+- Any constraints (unique, not null, etc.) that make sense
+
+For ARCHITECTURE diagrams, detailed_analysis should describe:
+- Each component's role
+- Data flow between components
+- API contracts (inferred)
+- Technology recommendations per layer
+
+For other types (mind_map, general), detailed_analysis can be a brief summary
+or empty string.
+
+STEP 4 — Based on detected type, provide relevant suggestions:
 
 If FLOWCHART:
-- Describe the algorithm this flowchart represents, even if it's a short 2-3 step process
-- Point out any logical errors or missing steps
-- Suggest one or two concrete improvements
+- Describe the algorithm, point out logical errors, suggest improvements
 
 If ARCHITECTURE:
-- Missing components relevant to what's already drawn (even a 2-3 component diagram can be missing something important, like an API gateway between a client and database)
-- Database or API recommendations based on the components shown
-- Scaling, performance, or security considerations if relevant to the components present
+- Missing components, API recommendations, scaling/security considerations
 
 If ER_DIAGRAM:
 - Missing relationships, normalization issues, index recommendations
@@ -259,23 +293,23 @@ If MIND_MAP:
 - Missing branches, better organization
 
 If GENERAL:
-- Explain what the diagram represents
-- Point out any errors or genuinely useful improvements
+- Explain what the diagram represents, point out improvements
 
-If MINIMAL (truly empty/meaningless only):
-- Briefly say there isn't enough content to analyze
-- Return an empty or near-empty suggestions array
+If MINIMAL:
+- Briefly say there isn't enough content, return near-empty suggestions
 
 IMPORTANT — calibrate suggestion depth correctly:
-- A diagram with even 2-3 meaningfully labeled and connected components (e.g. "User" → "App" → "Database") DOES have something worth analyzing. Give 2-4 genuinely useful, specific suggestions for it — don't under-respond just because it's small.
-- Only return few or zero suggestions when the diagram is truly minimal — unlabeled shapes, a stray line, or no real structure at all.
-- Larger, more complex diagrams (5+ components with multiple connections) can have up to 6 suggestions.
-- Every suggestion must reference the actual component names from the diagram — never generic, textbook advice that could apply to any diagram.
-- Do not pad with filler suggestions just to reach a count, but do not artificially shrink the response either. Match the response to what is genuinely useful for this specific diagram.
+- A diagram with even 2-3 meaningfully labeled and connected components DOES have something worth analyzing. Give 2-4 genuinely useful suggestions.
+- Larger diagrams (5+ components) can have up to 6 suggestions.
+- Every suggestion must reference actual component names.
+- Do not pad with filler, but do not shrink either.
 
 Return ONLY this JSON, nothing else:
 {
   "diagram_type": "flowchart|architecture|er_diagram|mind_map|general|minimal",
+  "codeable": true|false,
+  "code_type": "sql|pseudocode|api_boilerplate|null",
+  "detailed_analysis": "Detailed breakdown for code generation. Empty string if not codeable.",
   "summary": "1-2 sentences describing what this diagram represents",
   "suggestions": [
     {
@@ -454,4 +488,180 @@ RULES:
     .json(new ApiResponse(200, result, "Diagram generated successfully"));
 });
 
-export { architectureAssist, messCleanup, textToDiagram };
+const generateCode = asyncHandler(async (req, res) => {
+  const { detailed_analysis, code_type, language } = req.body;
+
+  if (!detailed_analysis || detailed_analysis.trim().length === 0) {
+    throw new ApiError(400, "Detailed analysis is required");
+  }
+
+  if (!code_type) {
+    throw new ApiError(400, "Code type is required");
+  }
+  console.log(language);
+
+  const promptGenerators = {
+    pseudocode: (analysis, lang) => {
+      const langMap = {
+        "c++": "C++",
+        python: "Python",
+        javascript: "JavaScript",
+        java: "Java",
+      };
+      const targetLang = langMap[lang?.toLowerCase()?.trim()] || "Python";
+
+      return `
+You are a programmer converting a flowchart into clean, straightforward ${targetLang} code.
+
+ALGORITHM ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- Write clean, readable ${targetLang} code that follows the flowchart's logic directly
+- Use normal, standard syntax and structure — no unnecessary abstractions, classes, or design patterns unless the flowchart clearly calls for them
+- Only include input validation, error handling, or edge-case checks that are explicitly shown in the flowchart — don't add extra ones on your own judgment
+- A short comment for each major step is fine, but don't over-explain obvious lines
+- Keep it close in size/complexity to what the flowchart actually shows — don't pad it out or over-engineer it
+
+Return ONLY the code, no explanations, no markdown fences, no extra text.
+`;
+    },
+
+    sql: (analysis, lang) => {
+      const normalized = lang?.toLowerCase()?.trim() || "";
+
+      if (normalized.includes("mongo")) {
+        return `
+You are an expert backend developer. Convert this ER diagram analysis into 
+Mongoose schemas.
+
+DATABASE ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- Create Mongoose schema for each entity
+- Use appropriate field types (String, Number, Date, ObjectId, etc.)
+- Define references for relationships (1:1, 1:N, M:N)
+- Add required fields, defaults, and validations where appropriate
+- Add indexes where needed
+- Include timestamps: true where sensible
+- Use ref for foreign keys
+
+Return ONLY the code, no explanations, no markdown fences, no extra text.
+`;
+      }
+
+      if (normalized.includes("prisma")) {
+        return `
+You are an expert backend developer. Convert this ER diagram analysis into a
+Prisma schema (schema.prisma).
+
+DATABASE ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- model blocks for each entity
+- Correct Prisma field types and attributes (@id, @default, @unique, @relation)
+- Relationships (1:1, 1:N, M:N) using proper Prisma relation syntax
+- Indexes where needed
+
+Return ONLY the code, no explanations, no markdown fences, no extra text.
+`;
+      }
+
+      if (normalized.includes("sequelize")) {
+        return `
+You are an expert backend developer. Convert this ER diagram analysis into
+Sequelize model definitions (JavaScript).
+
+DATABASE ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- DataTypes.define(...) block for each entity
+- Correct field types, allowNull, unique constraints
+- associations (hasOne, hasMany, belongsTo, belongsToMany) for relationships
+- Indexes where needed
+
+Return ONLY the code, no explanations, no markdown fences, no extra text.
+`;
+      }
+
+      // default: raw SQL
+      return `
+You are an expert database engineer. Convert this ER diagram analysis into 
+SQL schema.
+
+DATABASE ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- CREATE TABLE statements for each entity
+- Appropriate data types (INT, VARCHAR, TIMESTAMP, etc.)
+- PRIMARY KEY constraints
+- FOREIGN KEY constraints with ON DELETE/UPDATE actions
+- NOT NULL, UNIQUE constraints where appropriate
+- Indexes for foreign keys and frequently queried columns
+- Use clear table and column names
+
+Return ONLY the SQL, no explanations, no markdown fences, no extra text.
+`;
+    },
+
+    api_boilerplate: (analysis, lang) => {
+      const normalized = lang?.toLowerCase()?.trim() || "";
+      let targetFramework = "Express.js (Node.js)"; // default
+
+      if (normalized.includes("fastapi")) targetFramework = "FastAPI (Python)";
+      else if (normalized.includes("spring"))
+        targetFramework = "Spring Boot (Java)";
+      else if (normalized.includes("gin")) targetFramework = "Gin (Go)";
+      else if (normalized.includes("express"))
+        targetFramework = "Express.js (Node.js)";
+
+      return `
+You are an expert backend architect. Convert this architecture analysis into 
+${targetFramework} boilerplate.
+
+ARCHITECTURE ANALYSIS:
+${analysis}
+
+REQUIREMENTS:
+- Route definitions for each API endpoint
+- Controller stubs with proper function signatures
+- Middleware setup (auth, validation, error handling)
+- Service layer stubs
+- Folder structure comment at the top
+- No actual business logic implementation, just scaffolding
+
+Return ONLY the code, no explanations, no markdown fences, no extra text.
+`;
+    },
+  };
+
+  const promptBuilder = promptGenerators[code_type];
+  if (!promptBuilder) {
+    throw new ApiError(400, "Invalid code type");
+  }
+
+  const prompt = promptBuilder(detailed_analysis, language);
+
+  const response = await groq.chat.completions.create({
+    model: AI_MODELS["generateCode"],
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  if (!response) {
+    throw new ApiError(500, "Groq error");
+  }
+
+  const code = response.choices[0].message.content.trim();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { code, code_type, language }, "Code generated"),
+    );
+});
+
+export { architectureAssist, messCleanup, textToDiagram, generateCode };

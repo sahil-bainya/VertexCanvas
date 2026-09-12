@@ -8,7 +8,7 @@ export default function Header() {
   return (
     <nav className="fixed top-0 left-0 w-full z-50 shadow-lg  ">
       <div className="navbar bg-base-100 shadow-sm h-16 px-4!">
-        <div className="flex-1 pl-2!">
+        <div className="flex-1 ">
           <a>
             <AppName />
           </a>

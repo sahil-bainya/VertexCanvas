@@ -1,35 +1,89 @@
-export default function Logo({ className = "w-10 h-10" }) {
+export default function Logo({ 
+  h = 10, 
+  w = 10, 
+  vColor = "text-base-content", 
+  cColor = "text-primary",
+  nodeColor = "text-primary/50",
+  className = "" 
+}) {
+  const isNumeric = (val) => !isNaN(val) && !isNaN(parseFloat(val));
+  const isTailwindUnit = isNumeric(w) && isNumeric(h) && Number(w) <= 96;
+
+  const sizeClasses = isTailwindUnit ? `w-${w} h-${h}` : "";
+  const inlineStyles = !isTailwindUnit 
+    ? {
+        width: isNumeric(w) ? `${w}px` : w,
+        height: isNumeric(h) ? `${h}px` : h,
+      } 
+    : undefined;
+
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="70 70 360 360" className={`${className} text-base-content`} fill="none">
-      {/* Frame + shaft + tip: ink color, follows text-base-content */}
-      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="100" y="100" width="300" height="300" rx="40" strokeWidth="14" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 20 400 512"
+      className={`${sizeClasses} ${className}`}
+      style={inlineStyles}
+    >
+      <defs>
+        <mask id="vc-node-gap">
+          <rect width="512" height="512" fill="white" />
+          <circle cx="206" cy="320" r="28" fill="black" />
+          <line
+            x1="206"
+            y1="320"
+            x2="290"
+            y2="170"
+            stroke="black"
+            strokeWidth="26"
+            strokeLinecap="round"
+          />
+        </mask>
+      </defs>
 
-        <g transform="translate(250,250) rotate(45)">
-          <rect x="-25" y="-125" width="50" height="30" rx="12" strokeWidth="14" fill="var(--fallback-b1,#fff)" />
-          <rect x="-25" y="-95" width="50" height="175" strokeWidth="14" fill="var(--fallback-b1,#fff)" />
-          <line x1="0" y1="-95" x2="0" y2="80" strokeWidth="4" />
-          <path d="M -25 80 C -15 87, -8 87, 0 80 C 8 87, 15 87, 25 80 L 0 125 Z" strokeWidth="14" fill="var(--fallback-b1,#fff)" />
-          <polygon points="0,125 -12,105 12,105" fill="currentColor" stroke="none" />
+      {/* 'V' glyph */}
+      <path
+        className={vColor}
+        fill="currentColor"
+        d="M 112 212 
+           H 154 
+           L 206 332 
+           L 258 212 
+           H 300 
+           L 232 356 
+           Q 224 370 206 370 
+           Q 188 370 180 356 
+           Z"
+        mask="url(#vc-node-gap)"
+      />
 
-          {/* Accent: nodes + orange band, follows text-primary */}
-          <g className="text-primary" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="-25" y1="-105" x2="25" y2="-105" strokeWidth="8" />
-            <line x1="-12" y1="25" x2="12" y2="0" strokeWidth="6" />
-            <line x1="12" y1="0" x2="-12" y2="-40" strokeWidth="6" />
-            <line x1="-12" y1="-40" x2="12" y2="-65" strokeWidth="6" />
-            <circle cx="-12" cy="25" r="7" fill="currentColor" stroke="var(--fallback-b1,#fff)" strokeWidth="3" />
-            <circle cx="12" cy="0" r="7" fill="currentColor" stroke="var(--fallback-b1,#fff)" strokeWidth="3" />
-            <circle cx="-12" cy="-40" r="7" fill="currentColor" stroke="var(--fallback-b1,#fff)" strokeWidth="3" />
-            <circle cx="12" cy="-65" r="7" fill="currentColor" stroke="var(--fallback-b1,#fff)" strokeWidth="3" />
-          </g>
-        </g>
-      </g>
+      {/* 'C' glyph */}
+      <path
+        className={cColor}
+        fill="currentColor"
+        d="M 396 235 
+           C 382 220 362 210 334 210 
+           C 285 210 248 248 248 300 
+           C 248 352 285 390 334 390 
+           C 362 390 382 380 396 365 
+           L 370 336 
+           C 360 346 348 352 334 352 
+           C 305 352 286 330 286 300 
+           C 286 270 305 248 334 248 
+           C 348 248 360 254 370 264 
+           Z"
+      />
 
-      {/* Sparkle: also primary */}
-      <g className="text-primary" fill="currentColor">
-        <path d="M 355 145 Q 355 152 348 152 Q 355 152 355 159 Q 355 152 362 152 Q 355 152 355 145 Z" />
-        <circle cx="335" cy="170" r="2.5" />
+      {/* Graph / Node Connector */}
+      <g 
+        className={nodeColor}
+        stroke="currentColor" 
+        fill="currentColor" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      >
+        <line x1="206" y1="320" x2="290" y2="170" strokeWidth="14" />
+        <circle cx="206" cy="320" r="18" strokeWidth="0" />
+        <circle cx="290" cy="170" r="22" strokeWidth="0" />
       </g>
     </svg>
   );

@@ -13,6 +13,7 @@ const boardSchema = new Schema(
       ref: "User",
       required: true,
     },
+    ownerName: { type: String },
     canvasData: {
       type: Array,
       default: [],

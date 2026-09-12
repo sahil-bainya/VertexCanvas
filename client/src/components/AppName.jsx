@@ -2,8 +2,8 @@ import Logo from "./logo.jsx";
 import "./AppName.css";
 export default function AppName() {
   return (
-    <div className="flex flex-row items-center gap-1 mb-8">
-      <Logo className="w-12 h-12" />
+    <div className="flex flex-row items-center gap-0 mb-8">
+      <Logo h={25} w={25} />
       <div>
         <h1 className="flex items-center gap-2 font-sans text-xl md:text-3xl font-bold tracking-tight text-base-content">
           <span>

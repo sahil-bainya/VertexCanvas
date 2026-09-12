@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import api from "../../services/api.js";
 import { useDispatch } from "react-redux";
-import { setUser } from "../../store/authSlice";
+import { setUser } from "../../store/authSlice.js";
 import { notify } from "../../utils/toast.jsx";
 import { Button, Input } from "../";
 
