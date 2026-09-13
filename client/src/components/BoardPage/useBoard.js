@@ -212,7 +212,7 @@ export function useBoard() {
         from: fromId,
         to: toId,
         points,
-        stroke,
+        stroke: getDefaultStrokeColor(),
         fill,
         isDefaultColor: true,
       },

@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -7,7 +8,6 @@ import {
   uploadOnCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
-import mongoose from "mongoose";
 
 const generateAccessAndrefreshTokens = async (userId) => {
   try {
@@ -47,8 +47,8 @@ const registerUser = asyncHandler(async (req, res) => {
     avatar: avatar?.url || "",
   });
   const createdUser = await User.findById(user._id).select(
-    "-password --refreshToken",
-  ); // to remove fields
+    "-password -refreshToken",
+  ); // fixed: removed duplicate dash typo
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
@@ -102,7 +102,7 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken",
   );
   const options = {
-    httpOnly: true, // now only server can modify the cookies , not the frontend
+    httpOnly: true,
     secure: true,
     sameSite: "none",
     path: "/",
@@ -149,16 +149,24 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword?.trim()) {
+    throw new ApiError(400, "Old and new password are required");
+  }
+
   const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old password");
   }
-  if (newPassword.length == 0) {
-    throw new ApiError(400, "Please enter the new password");
-  }
+
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
+
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"));
@@ -172,20 +180,38 @@ const getCurrentuser = asyncHandler(async (req, res) => {
 
 const UpdateUserDetails = asyncHandler(async (req, res) => {
   const { name, email } = req.body;
-  if (!name || !email) {
+
+  if (!name?.trim() || !email?.trim()) {
     throw new ApiError(400, "All fields are required");
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
+  const existingUser = await User.findOne({
+    email,
+    _id: { $ne: req.user._id },
+  });
+  if (existingUser) {
+    throw new ApiError(409, "Email already in use by another account");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
       },
     },
-    { returnDocument: "after" },
+    { new: true, runValidators: true },
   ).select("-password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
 
   return res
     .status(200)
@@ -202,6 +228,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while uploading avatar on cloudinary");
   }
   const oldAvatarUrl = req.user.avatar;
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -209,9 +236,20 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         avatar: avatar.url,
       },
     },
-    { returnDocument: "after" },
+    { new: true },
   ).select("-password");
-  await deleteFromCloudinary(oldAvatarUrl);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // avatar update ho chuka hai, old file delete fail-safe rakha hai
+  try {
+    if (oldAvatarUrl) await deleteFromCloudinary(oldAvatarUrl);
+  } catch (error) {
+    console.error("Failed to delete old avatar:", error?.message);
+  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Avatar updated successfully"));
@@ -248,7 +286,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       path: "/",
     };
 
-    const { accessToken, newRefreshToken } =
+    const { accessToken, refreshToken: newRefreshToken } =
       await generateAccessAndrefreshTokens(user._id);
 
     return res
@@ -266,6 +304,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
 });
+
 export {
   registerUser,
   updateUserAvatar,
