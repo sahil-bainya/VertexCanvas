@@ -1,28 +1,22 @@
-export default function Logo({ 
-  h = 10, 
-  w = 10, 
-  vColor = "text-base-content", 
+export default function Logo({
+  h = 40,
+  w = 40,
+  vColor = "text-base-content",
   cColor = "text-primary",
   nodeColor = "text-primary/50",
-  className = "" 
+  className = "",
 }) {
   const isNumeric = (val) => !isNaN(val) && !isNaN(parseFloat(val));
-  const isTailwindUnit = isNumeric(w) && isNumeric(h) && Number(w) <= 96;
 
-  const sizeClasses = isTailwindUnit ? `w-${w} h-${h}` : "";
-  const inlineStyles = !isTailwindUnit 
-    ? {
-        width: isNumeric(w) ? `${w}px` : w,
-        height: isNumeric(h) ? `${h}px` : h,
-      } 
-    : undefined;
+  const resolvedWidth = isNumeric(w) ? `${w}px` : w;
+  const resolvedHeight = isNumeric(h) ? `${h}px` : h;
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 20 400 512"
-      className={`${sizeClasses} ${className}`}
-      style={inlineStyles}
+      className={className}
+      style={{ width: resolvedWidth, height: resolvedHeight }}
     >
       <defs>
         <mask id="vc-node-gap">
@@ -74,11 +68,11 @@ export default function Logo({
       />
 
       {/* Graph / Node Connector */}
-      <g 
+      <g
         className={nodeColor}
-        stroke="currentColor" 
-        fill="currentColor" 
-        strokeLinecap="round" 
+        stroke="currentColor"
+        fill="currentColor"
+        strokeLinecap="round"
         strokeLinejoin="round"
       >
         <line x1="206" y1="320" x2="290" y2="170" strokeWidth="14" />

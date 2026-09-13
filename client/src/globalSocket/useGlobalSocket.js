@@ -3,6 +3,8 @@ import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
 import { notify } from "../utils/toast.jsx";
 
+const WS_URL = import.meta.env.VITE_SOCKET_URL;
+
 export function useGlobalSocket() {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -11,7 +13,7 @@ export function useGlobalSocket() {
   useEffect(() => {
     if (!user) return;
 
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io(`${WS_URL}`, {
       withCredentials: true,
     });
 

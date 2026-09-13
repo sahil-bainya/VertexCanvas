@@ -1,2 +1,1 @@
-export const DB_NAME = "VisualWhiteBoard"
-
+export const DB_NAME = "vertexcanvas";

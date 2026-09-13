@@ -3,7 +3,7 @@ import "./AppName.css";
 export default function AppName() {
   return (
     <div className="flex flex-row items-center gap-0 mb-8">
-      <Logo h={25} w={25} />
+      <Logo h={80} w={80} />
       <div>
         <h1 className="flex items-center gap-2 font-sans text-xl md:text-3xl font-bold tracking-tight text-base-content">
           <span>

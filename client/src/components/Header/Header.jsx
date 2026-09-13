@@ -25,7 +25,7 @@ export default function Header() {
                 {user?.avatar ? (
                   <img
                     src={`${user?.avatar}`}
-                    alt="user photo"
+                    alt="Upload profile photo"
                     className="w-full h-full object-cover"
                   />
                 ) : (
