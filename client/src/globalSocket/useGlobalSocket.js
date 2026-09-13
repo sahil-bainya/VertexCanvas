@@ -11,6 +11,7 @@ export function useGlobalSocket() {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const user = useSelector((state) => state.auth.user);
+  const userId = user?._id;
 
   useEffect(() => {
     if (!user) return;
@@ -60,7 +61,7 @@ export function useGlobalSocket() {
       socketRef.current.disconnect();
       socketRef.current = null;
     };
-  }, [user]);
+  }, [userId]);
 
   return { socketRef, isConnected };
 }
