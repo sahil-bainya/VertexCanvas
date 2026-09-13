@@ -22,6 +22,9 @@ import aiRouter from "./routes/ai.routes.js";
 app.use("/api/user", userRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/ai", aiRouter);
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: Date.now() });
+});
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
