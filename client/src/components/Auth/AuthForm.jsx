@@ -2,7 +2,7 @@ import { useState } from "react";
 import Login from "./Login";
 import SignUp from "./SignUp";
 import Logo from "../logo.jsx";
-import "./authPage.css";
+import "./authpage.css"
 
 const LOGIN_IMG =
   "https://res.cloudinary.com/datjhn3ph/image/upload/v1789222287/login_b9a3fw.png";
