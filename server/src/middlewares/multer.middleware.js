@@ -10,10 +10,14 @@ if (!fs.existsSync(uploadDir)) {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    console.log("Multer destination:", uploadDir);
+    console.log("Folder exists:", fs.existsSync(uploadDir));
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    const filename = `${Date.now()}-${file.originalname}`;
+    console.log("Multer filename:", filename);
+    cb(null, filename);
   },
 });
 
