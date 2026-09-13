@@ -7,6 +7,7 @@ A real-time collaborative whiteboard built with a custom canvas engine and AI-po
 [![Live Demo](https://img.shields.io/badge/Live-vertexcanvas.vercel.app-6B21A8?style=for-the-badge&logo=vercel&logoColor=white)](https://vertexcanvas-teal.vercel.app)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-VertexCanvas-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sahil-bainya/VertexCanvas)
+> **Note:** The backend is hosted on Render's free tier and is kept awake via UptimeRobot. If you experience a brief delay on the very first request, the server may be warming up — subsequent requests will be instant.
 
 ---
 ## Table of Contents
