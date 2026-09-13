@@ -3,7 +3,9 @@ import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
 import { notify } from "../utils/toast.jsx";
 
-const WS_URL = import.meta.env.VITE_SOCKET_URL;
+const WS_URL = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://vertexcanvas.onrender.com";
 
 export function useGlobalSocket() {
   const socketRef = useRef(null);
