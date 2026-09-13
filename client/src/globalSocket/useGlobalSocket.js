@@ -26,7 +26,7 @@ export function useGlobalSocket() {
     });
 
     socketRef.current.on("access-requested", (data) => {
-      notify.info(`${data.requesterName} wants to access your board`);
+      // notify.info(`${data.requesterName} wants to access your board`);
       window.dispatchEvent(new CustomEvent("access-request", { detail: data }));
     });
 
