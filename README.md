@@ -88,7 +88,7 @@ The entire product is **built from scratch** — shape rendering, arrow routing,
 - **Infinite canvas** — zoom (0.1×–5×), pan, and grid toggle
 - **Theme-aware rendering** — shapes auto-recolor on theme switch, manual colors preserved via `isDefaultColor` flag
 
-### 🤖 AI Features (Groq / LLaMA 3.3)
+### 🤖 AI Features (Groq / openai/gpt-oss-120b)
 
 - **Analyze** — Detects diagram type (flowchart, architecture, ER, mind map) and returns calibrated suggestions, error detection, and improvement recommendations
 - **Organize** — AI extracts logical relationships, ELK.js computes deterministic pixel positions for a clean layout
