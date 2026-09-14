@@ -106,12 +106,13 @@ export default function Toolbar({
         {Object.entries(SHAPE_CONFIG)
           .filter(([type]) => type !== "freehand")
           .map(([type, config]) => (
-            <li>
+            <li key={type}>
               <div className="tooltip tooltip-bottom" data-tip={config.datatip}>
                 <button
                   key={type}
                   onClick={() => {
                     setSelectedId(null);
+                    setSelectedArrowId(null);
                     setTool("select");
                     setPendingShapeType(type);
                   }}

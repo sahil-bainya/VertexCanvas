@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { UpdateAvatar, UpdateProfile, ChangePassword } from "./";
-import { ArrowRight, Mail, Lock, User, SquarePen } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ImagePlus } from "lucide-react";
 export default function Settings() {
   const user = useSelector((state) => state.auth.user);
   const [activeModal, setActiveModal] = useState(null);
@@ -15,9 +15,15 @@ export default function Settings() {
         >
           <div className="avatar ">
             <div className="w-40">
-              <img src={user?.avatar} alt="Avatar" className="rounded-xl" />
+              {user?.avatar ? (
+                <img
+                  src={user?.avatar}
+                  alt="Profile Image"
+                  className="rounded-xl"
+                />
+              ) : <p className="text-center pt-15!">Upload Profile Image</p>}
               <div className="absolute inset-0 backdrop-brightness-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                <SquarePen color="#ffffff" />
+                <ImagePlus color="#ffffff" />
               </div>
             </div>
           </div>

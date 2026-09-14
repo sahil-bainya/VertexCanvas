@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FileSearch, Layers, Share2, Sparkles, Loader2, X } from "lucide-react";
 import TextToDiagram from "./TextToDiagram.jsx";
 
-
 const TOP_TABS = [
   {
     id: "analyze",
@@ -15,10 +14,10 @@ const TOP_TABS = [
     label: "Organize",
     sub: "Clean up your diagram",
     icon: Layers,
+    warning: "ⓘ Experimental",
   },
   { id: "generate", label: "Generate", sub: "Create from text", icon: Share2 },
 ];
-
 
 function GeneratorModal({
   onClose,
@@ -102,11 +101,6 @@ function GeneratorModal({
                     >
                       {tab.label}
                     </span>
-                    {tab.badge && (
-                      <span className="badge badge-primary badge-xs font-medium px-1.5!">
-                        {tab.badge}
-                      </span>
-                    )}
                   </div>
                   <p className="text-xs text-base-content/50 mt-0.5!">
                     {isOrganizeLoading ? loadingText : tab.sub}

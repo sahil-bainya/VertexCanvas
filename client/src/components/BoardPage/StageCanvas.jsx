@@ -4,7 +4,7 @@ import useImage from "use-image";
 import { SHAPE_CONFIG } from "./shapeConfig.jsx";
 import { getTextPosition } from "./canvasHelper.js";
 import "./BoardStyle.css";
-
+import { Fragment, useEffect } from "react";
 const getUserColor = (userId) => {
   const colors = [
     "#4A90E2", // Blue
@@ -39,7 +39,6 @@ export default function StageCanvas({
   selectedId,
   handleShapeClick,
   grid,
-  setPendingShapeType,
   pendingShapeType,
   addShape,
   tool,
@@ -55,6 +54,20 @@ export default function StageCanvas({
 }) {
   const [cursorImage] = useImage("https://img.icons8.com/color/48/cursor.png");
 
+  useEffect(() => {
+    const container = stageRef.current?.container();
+    if (!container) return;
+
+    if (pendingShapeType) {
+      container.style.cursor = "crosshair";
+    } else if (tool === "freehand") {
+      container.style.cursor = "url('/cursors/pencil.svg') 4 28, crosshair";
+    } else if (tool === "eraser") {
+      container.style.cursor = "url('/cursors/erasor.svg') 4 26, pointer";
+    } else {
+      container.style.cursor = "default";
+    }
+  }, [tool, pendingShapeType]);
   return (
     <Stage
       id={grid ? "Canvas" : undefined}
@@ -81,7 +94,7 @@ export default function StageCanvas({
           const transform = stage.getAbsoluteTransform().copy().invert();
           const canvasPos = transform.point(pointerPos);
           addShape(pendingShapeType, canvasPos.x, canvasPos.y);
-          setPendingShapeType(null);
+          // setPendingShapeType(null);
           return;
         }
 
@@ -113,13 +126,6 @@ export default function StageCanvas({
           endFreehandDraw();
         }
       }}
-      onMouseEnter={() => {
-        const container = stageRef.current.container();
-        if (tool === "freehand") container.style.cursor = "crosshair";
-        else if (tool === "eraser") container.style.cursor = "grab";
-        else if (pendingShapeType) container.style.cursor = "crosshair";
-        else container.style.cursor = "default";
-      }}
     >
       <Layer>
         {arrows.map((arrow) => (
@@ -145,7 +151,7 @@ export default function StageCanvas({
           const isFreehand = el.type === "freehand";
 
           return (
-            <>
+            <Fragment key={el.id}>
               <Component
                 key={el.id}
                 draggable={!isFreehand}
@@ -154,7 +160,6 @@ export default function StageCanvas({
                 rotation={el.rotation || 0}
                 fill={el.fill}
                 stroke={el.stroke}
-                hitStrokeWidth={isFreehand ? 20 : undefined}
                 ref={(node) => (shapeRefs.current[el.id] = node)}
                 onClick={
                   isFreehand
@@ -178,6 +183,9 @@ export default function StageCanvas({
                 onTransformEnd={() => handleTransformEnd(el.id)}
                 listening={isFreehand ? tool === "eraser" : true}
                 {...getProps(el)}
+                hitStrokeWidth={
+                  tool === "eraser" ? 30 : isFreehand ? 20 : undefined
+                }
               />
 
               {el.type !== "text" && el.text && (
@@ -191,7 +199,7 @@ export default function StageCanvas({
                   rotation={el.rotation || 0}
                 />
               )}
-            </>
+            </Fragment>
           );
         })}
         {Object.entries(remoteCursors).map(([userId, cursor]) => {
