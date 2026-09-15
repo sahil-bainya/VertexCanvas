@@ -70,8 +70,6 @@ The entire product is **built from scratch** — shape rendering, arrow routing,
 | **Frontend** | https://vertexcanvas-teal.vercel.app |
 | **Backend API** | https://vertexcanvas.onrender.com |
 
-> **Note:** Backend is hosted on Render's free tier. First request may take 30–60 seconds to wake up.
-
 ---
 
 ## Features
@@ -194,7 +192,7 @@ The entire product is **built from scratch** — shape rendering, arrow routing,
 ### AI / Infrastructure
 | Service | Purpose |
 |---|---|
-| **Groq API** (LLaMA 3.3 70B) | Diagram analysis, cleanup, generation, code gen |
+| **Groq API** (openai/gpt-oss-120b) | Diagram analysis, cleanup, generation, code gen |
 | **ELK.js** | Hybrid AI + algorithm layout engine |
 | **Vercel** | Frontend hosting |
 | **Render** | Backend hosting |
