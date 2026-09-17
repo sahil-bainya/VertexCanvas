@@ -11,7 +11,7 @@ import "./index.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
 import { AuthLayout } from "./components";
-import { AuthPage, BoardPage, DashboardPage, SettingsPage } from "./pages";
+import { AuthPage, BoardPage, DashboardPage, SettingsPage ,LandingPage} from "./pages";
 import SocketProvider from "./globalSocket/SocketProvider.jsx";
 
 const savedTheme = localStorage.getItem("theme") || "default";
@@ -20,9 +20,13 @@ document.documentElement.setAttribute("data-theme", savedTheme);
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <LandingPage />,
+  },
+  {
+    path: "/",
     element: <App />,
     children: [
-      { index: true, element: <Navigate to="/login" /> },
+      {  element: <Navigate to="/login" /> },
       { path: "/login", element: <AuthPage /> },
       { path: "/register", element: <AuthPage /> },
       {

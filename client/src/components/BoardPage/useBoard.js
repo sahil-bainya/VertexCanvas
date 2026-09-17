@@ -798,7 +798,172 @@ export function useBoard() {
 
   const [boardAccess, setBoardAccess] = useState(null); // null = loading
   const [pendingRequests, setPendingRequests] = useState([]);
-
+const temp={
+  "shapes": [
+    {
+      "id": "title1",
+      "type": "text",
+      "x": 550,
+      "y": 30,
+      "text": "Scalable Web App Architecture",
+      "fontSize": 30,
+      "fill": "#111827"
+    },
+    {
+      "id": "client",
+      "type": "roundedRect",
+      "x": 80,
+      "y": 220,
+      "width": 160,
+      "height": 80,
+      "cornerRadius": 14,
+      "text": "Client (Web/App)",
+      "fill": "#e0f2fe",
+      "stroke": "#0369a1"
+    },
+    {
+      "id": "cdn",
+      "type": "roundedRect",
+      "x": 320,
+      "y": 100,
+      "width": 160,
+      "height": 80,
+      "cornerRadius": 14,
+      "text": "CDN",
+      "fill": "#ede9fe",
+      "stroke": "#7c3aed"
+    },
+    {
+      "id": "lb",
+      "type": "diamond",
+      "x": 400,
+      "y": 260,
+      "points": [0, -60, 70, 0, 0, 60, -70, 0, 0, -60],
+      "text": "Load Balancer",
+      "fill": "#fef9c3",
+      "stroke": "#ca8a04",
+      "closed": true,
+      "strokeWidth": 2
+    },
+    {
+      "id": "server1",
+      "type": "rect",
+      "x": 600,
+      "y": 150,
+      "width": 170,
+      "height": 80,
+      "text": "App Server 1",
+      "fill": "#dcfce7",
+      "stroke": "#16a34a"
+    },
+    {
+      "id": "server2",
+      "type": "rect",
+      "x": 600,
+      "y": 260,
+      "width": 170,
+      "height": 80,
+      "text": "App Server 2",
+      "fill": "#dcfce7",
+      "stroke": "#16a34a"
+    },
+    {
+      "id": "server3",
+      "type": "rect",
+      "x": 600,
+      "y": 370,
+      "width": 170,
+      "height": 80,
+      "text": "App Server 3",
+      "fill": "#dcfce7",
+      "stroke": "#16a34a"
+    },
+    {
+      "id": "cache",
+      "type": "ellipse",
+      "x": 900,
+      "y": 150,
+      "radiusX": 95,
+      "radiusY": 50,
+      "text": "Redis Cache",
+      "fill": "#fee2e2",
+      "stroke": "#dc2626"
+    },
+    {
+      "id": "queue",
+      "type": "roundedRect",
+      "x": 810,
+      "y": 260,
+      "width": 180,
+      "height": 80,
+      "cornerRadius": 14,
+      "text": "Message Queue",
+      "fill": "#fce7f3",
+      "stroke": "#db2777"
+    },
+    {
+      "id": "worker",
+      "type": "rect",
+      "x": 1060,
+      "y": 260,
+      "width": 170,
+      "height": 80,
+      "text": "Background Worker",
+      "fill": "#fae8ff",
+      "stroke": "#a21caf"
+    },
+    {
+      "id": "dbmaster",
+      "type": "roundedRect",
+      "x": 900,
+      "y": 400,
+      "width": 180,
+      "height": 90,
+      "cornerRadius": 14,
+      "text": "DB (Master)",
+      "fill": "#dbeafe",
+      "stroke": "#2563eb"
+    },
+    {
+      "id": "dbreplica",
+      "type": "roundedRect",
+      "x": 1150,
+      "y": 400,
+      "width": 180,
+      "height": 90,
+      "cornerRadius": 14,
+      "text": "DB (Replica)",
+      "fill": "#dbeafe",
+      "stroke": "#2563eb"
+    },
+    {
+      "id": "storage",
+      "type": "rect",
+      "x": 1330,
+      "y": 150,
+      "width": 170,
+      "height": 80,
+      "text": "Object Storage (S3)",
+      "fill": "#fef3c7",
+      "stroke": "#d97706"
+    }
+  ],
+  "arrows": [
+    { "id": "a1", "from": "client", "to": "cdn" },
+    { "id": "a2", "from": "client", "to": "lb" },
+    { "id": "a3", "from": "lb", "to": "server1" },
+    { "id": "a4", "from": "lb", "to": "server2" },
+    { "id": "a5", "from": "lb", "to": "server3" },
+    { "id": "a6", "from": "server1", "to": "cache" },
+    { "id": "a7", "from": "server2", "to": "cache" },
+    { "id": "a8", "from": "server2", "to": "queue" },
+    { "id": "a9", "from": "queue", "to": "worker" },
+    { "id": "a10", "from": "server3", "to": "dbmaster" },
+    { "id": "a11", "from": "dbmaster", "to": "dbreplica" },
+    { "id": "a12", "from": "worker", "to": "storage" },
+    { "id": "a13", "from": "cdn", "to": "storage" }
+  ]
+}
   useEffect(() => {
     (async () => {
       try {
@@ -806,9 +971,11 @@ export function useBoard() {
         const { board, access } = res.data.data;
         setBoardAccess(access);
         if (access.isOwner || access.isCollaborator) {
-          setShapes(board.canvasData || []);
+          // setShapes(board.canvasData || []);
+          setShapes(temp.shapes);
           setBoardName(board.title);
-          setArrows(board.arrows || []);
+          // setArrows(board.arrows || []);
+          setArrows(temp.arrows);
           setBoardNotes(board.boardNotes || []);
         }
         if (access.isOwner && board.pendingRequests?.length) {
