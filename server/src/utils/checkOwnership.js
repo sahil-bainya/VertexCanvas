@@ -1,19 +1,19 @@
 export const getBoardAccess = (board, userId) => {
   // String comparison use karo - reliable
-  if (user.role === "admin") {
-    return { isOwner: true, isCollaborator: true, isAdmin: true };
+  if (user?.role === "admin") {
+    return { isOwner: true, isCollaborator: true };
   }
   if (board.owner.toString() === userId.toString()) {
     return { isOwner: true, isCollaborator: false };
   }
-  
+
   const isCollaborator = board.collaborators?.some(
-    (collabId) => collabId.toString() === userId.toString()
+    (collabId) => collabId.toString() === userId.toString(),
   );
-  
+
   if (isCollaborator) {
     return { isOwner: false, isCollaborator: true };
   }
-  
+
   return { isOwner: false, isCollaborator: false };
 };
