@@ -1,5 +1,8 @@
 export const getBoardAccess = (board, userId) => {
   // String comparison use karo - reliable
+  if (user.role === "admin") {
+    return { isOwner: true, isCollaborator: true, isAdmin: true };
+  }
   if (board.owner.toString() === userId.toString()) {
     return { isOwner: true, isCollaborator: false };
   }
