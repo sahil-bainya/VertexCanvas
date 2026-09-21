@@ -11,24 +11,28 @@ import "./index.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
 import { AuthLayout } from "./components";
-import { AuthPage, BoardPage, DashboardPage, SettingsPage ,LandingPage} from "./pages";
+import {
+  AuthPage,
+  BoardPage,
+  DashboardPage,
+  SettingsPage,
+  LandingPage,
+} from "./pages";
 import SocketProvider from "./globalSocket/SocketProvider.jsx";
-
+import AdminPage from "./components/Admin/AdminPage.jsx";
 const savedTheme = localStorage.getItem("theme") || "default";
 document.documentElement.setAttribute("data-theme", savedTheme);
 
 const router = createBrowserRouter([
+  // Public
+  { path: "/", element: <LandingPage /> },
+  { path: "/login", element: <AuthPage /> },
+  { path: "/register", element: <AuthPage /> },
+
+  // Protected (App layout wrapper)
   {
-    path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/",
     element: <App />,
     children: [
-      {  element: <Navigate to="/login" /> },
-      { path: "/login", element: <AuthPage /> },
-      { path: "/register", element: <AuthPage /> },
       {
         path: "/dashboard",
         element: (
@@ -53,9 +57,19 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
-      { path: "*", element: <Navigate to="/login" /> },
+      {
+        path: "/admin",
+        element: (
+          <AuthLayout>
+            <AdminPage />
+          </AuthLayout>
+        ),
+      },
     ],
   },
+
+  // Catch-all
+  { path: "*", element: <Navigate to="/" /> },
 ]);
 
 createRoot(document.getElementById("root")).render(

@@ -861,7 +861,7 @@ export function useBoard() {
   }, [fullScreen]);
 
   const autoSaveTimer = useRef(null);
-  const isInitialLoad = useRef(true); // taaki "load-hote-hi-save"-na-ho-jaaye
+  const isInitialLoad = useRef(true); 
 
   useEffect(() => {
     // pehli-baar-jab-board-load-hota-hai, "shapes"-empty-se-populate-hota-hai — yeh-save-trigger-nahi-karna

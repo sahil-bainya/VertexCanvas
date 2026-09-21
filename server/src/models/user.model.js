@@ -26,6 +26,11 @@ const userSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     // oauth_provider: {
     //   type: String,
     //   enum: ["local", "google"], // Local ya Google dono me se koi ek hoga
@@ -41,8 +46,8 @@ const userSchema = new Schema(
 
 // hash password before saving
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return; 
-  this.password = await bcrypt.hash(this.password, 10); 
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
@@ -59,7 +64,7 @@ userSchema.methods.generateAccessToken = function () {
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
+    },
   );
 };
 
@@ -71,7 +76,7 @@ userSchema.methods.generateRefreshToken = function () {
     process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
+    },
   );
 };
 
