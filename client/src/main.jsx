@@ -10,7 +10,7 @@ import { Toaster } from "react-hot-toast";
 import "./index.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
-import { AuthLayout, Protected } from "./components";
+import { AuthLayout } from "./components";
 import {
   AuthPage,
   BoardPage,
@@ -24,31 +24,10 @@ const savedTheme = localStorage.getItem("theme") || "default";
 document.documentElement.setAttribute("data-theme", savedTheme);
 
 const router = createBrowserRouter([
-  // Public (redirect if logged in)
-  {
-    path: "/",
-    element: (
-      <Protected>
-        <LandingPage />
-      </Protected>
-    ),
-  },
-  {
-    path: "/login",
-    element: (
-      <Protected>
-        <AuthPage />
-      </Protected>
-    ),
-  },
-  {
-    path: "/register",
-    element: (
-      <Protected>
-        <AuthPage />
-      </Protected>
-    ),
-  },
+  // Public
+  { path: "/", element: <LandingPage /> },
+  { path: "/login", element: <AuthPage /> },
+  { path: "/register", element: <AuthPage /> },
 
   // Protected (App layout wrapper)
   {
