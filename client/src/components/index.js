@@ -12,10 +12,10 @@ import AppName from "./AppName.jsx";
 import AuthForm from "./Auth/AuthForm.jsx";
 import Footer from "./Footer.jsx";
 import ToggleTheme from "./ToggleTheme.jsx";
-
+import Protected from "./AuthLayout.jsx";
 export {
   ToggleTheme,
-  Input,
+  Input,Protected,
   AuthForm,
   AppName,
   AuthLayout,
