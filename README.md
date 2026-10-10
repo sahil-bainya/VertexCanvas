@@ -1,13 +1,34 @@
-# VertexCanvas
+<!-- Hero Banner -->
+<p align="center">
+  <img
+    width="100%"
+    alt="VertexCanvas — A Space to Think, Create & Collaborate"
+    src="https://github.com/user-attachments/assets/75046597-e807-4016-8d00-7071a9ce49bd"
+  />
+</p>
 
-> **A Space to Think, Create & Collaborate.**
+<!-- Centered Badges -->
+<p align="center">
+  <a href="https://vertexcanvas-teal.vercel.app">
+    <img src="https://img.shields.io/badge/Live-vertexcanvas.vercel.app-6B21A8?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" />
+  </a>
+  <a href="https://github.com/sahil-bainya/VertexCanvas">
+    <img src="https://img.shields.io/badge/GitHub-VertexCanvas-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository" />
+  </a>
+</p>
 
-A real-time collaborative whiteboard built with a custom canvas engine and AI-powered diagram intelligence — analyze, organize, and generate diagrams directly on the canvas.
 
-[![Live Demo](https://img.shields.io/badge/Live-vertexcanvas.vercel.app-6B21A8?style=for-the-badge&logo=vercel&logoColor=white)](https://vertexcanvas-teal.vercel.app)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-VertexCanvas-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sahil-bainya/VertexCanvas)
-> **Note:** The backend is hosted on Render's free tier and is kept awake via UptimeRobot. If you experience a brief delay on the very first request, the server may be warming up — subsequent requests will be instant.
+<h2 align="center">
+  Real-time whiteboarding with AI-powered diagram intelligence.
+</h2>
+<p align="center">
+  Analyze, organize, and generate diagrams directly on an interactive canvas.
+  <br />
+  Built for seamless collaboration and creative thinking.
+</p>
 
 ---
 ## Table of Contents
