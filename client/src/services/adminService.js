@@ -7,6 +7,8 @@ export const adminApi = {
   getBoardDetails: (boardId) => api.get(`/admin/boards/${boardId}`),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
   deleteBoard: (boardId) => api.delete(`/admin/boards/${boardId}`),
+  getVisits: (page = 1) => api.get(`/admin/visits?page=${page}&limit=50`),
+  getVisitStats: () => api.get("/admin/visits/stats"),
   updateUserRole: (userId, role) =>
     api.patch(`/admin/users/${userId}/role`, { role }),
 };

@@ -19,11 +19,14 @@ import userRoutes from "./routes/user.route.js";
 import boardRoutes from "./routes/board.route.js";
 import aiRouter from "./routes/ai.routes.js";
 import adminRouter from "./routes/admin.routes.js";
+import trackRouter from "./routes/track.routes.js";
 
 app.use("/api/user", userRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/admin", adminRouter);
 app.use("/api/ai", aiRouter);
+app.use("/api/track", trackRouter);
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: Date.now() });
 });

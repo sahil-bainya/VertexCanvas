@@ -9,6 +9,8 @@ import {
   deleteUser,
   deleteBoard,
   updateUserRole,
+  getVisits,
+  getVisitStats,
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -24,5 +26,7 @@ router.get("/boards/:boardId", getBoardDetails);
 router.delete("/users/:userId", deleteUser);
 router.delete("/boards/:boardId", deleteBoard);
 router.patch("/users/:userId/role", updateUserRole);
+router.get("/visits", getVisits);
+router.get("/visits/stats", getVisitStats);
 
 export default router;

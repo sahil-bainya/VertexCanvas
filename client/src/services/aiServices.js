@@ -30,6 +30,7 @@ const textTodiagram = async (
     startY,
     selectedType,
   });
+  console.log(response)
   return response.data.data;
 };
 export { architectureAssist, messCleanup, textTodiagram, generateCode };

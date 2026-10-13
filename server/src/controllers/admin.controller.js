@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Board } from "../models/board.model.js";
+import { VisitLog } from "../models/loginLog.model.js";
 
 const getStats = asyncHandler(async (req, res) => {
   const [totalUsers, totalBoards, recentUsers, recentBoards] =
@@ -55,7 +56,7 @@ const getAllBoards = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { boards }, "Boards fetched"));
 });
 
-// Get single board details
+
 const getBoardDetails = asyncHandler(async (req, res) => {
   const { boardId } = req.params;
 
@@ -71,7 +72,7 @@ const getBoardDetails = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, { board }, "Board fetched"));
 });
 
-// Delete any user
+
 const deleteUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
@@ -85,7 +86,7 @@ const deleteUser = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, "User deleted"));
 });
 
-// Delete any board
+
 const deleteBoard = asyncHandler(async (req, res) => {
   const { boardId } = req.params;
 
@@ -94,7 +95,7 @@ const deleteBoard = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, "Board deleted"));
 });
 
-// Change user role
+
 const updateUserRole = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { role } = req.body;
@@ -112,6 +113,60 @@ const updateUserRole = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, { user }, "Role updated"));
 });
 
+const getVisits = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 50 } = req.query;
+  const skip = (page - 1) * limit;
+
+  const [visits, total] = await Promise.all([
+    VisitLog.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate("userId", "name email"),
+    VisitLog.countDocuments(),
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      visits,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit),
+      },
+    }, "Visits fetched")
+  );
+});
+
+// Get visit stats
+const getVisitStats = asyncHandler(async (req, res) => {
+  const [total, uniqueSessions, byCountry, byDevice, today] = await Promise.all([
+    VisitLog.countDocuments(),
+    VisitLog.distinct("sessionId"),
+    VisitLog.aggregate([
+      { $group: { _id: "$country", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]),
+    VisitLog.aggregate([
+      { $group: { _id: "$device.deviceType", count: { $sum: 1 } } },
+    ]),
+    VisitLog.countDocuments({
+      createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+    }),
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      total,
+      uniqueVisitors: uniqueSessions.length,
+      today,
+      byCountry,
+      byDevice,
+    }, "Visit stats fetched")
+  );
+});
+
 export {
   getStats,
   getAllUsers,
@@ -120,4 +175,6 @@ export {
   deleteUser,
   deleteBoard,
   updateUserRole,
+   getVisits,
+  getVisitStats,
 };

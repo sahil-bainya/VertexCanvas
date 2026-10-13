@@ -7,7 +7,7 @@ import { APIError } from "groq-sdk";
 const AI_MODELS = {
   assist: "openai/gpt-oss-120b",
   cleanup: "openai/gpt-oss-20b",
-  textToDiagram: "openai/gpt-oss-120b",
+  textToDiagram: "openai/gpt-oss-20b",
   generateCode: "openai/gpt-oss-120b",
 };
 
@@ -418,21 +418,174 @@ Return ONLY this JSON, nothing else:
     .status(200)
     .json(new ApiResponse(200, result, "Logical relations identified"));
 });
+// ─────────────────────────────────────────────────────────────
+// REPLACE the old `textToDiagram` handler with everything below.
+// Keep your existing imports, AI_MODELS and getDiagramTypeInstructions.
+// The old `diagramSchema` is no longer used by textToDiagram (you can keep or
+// delete it — nothing else in the file references it).
+// architectureAssist, messCleanup and generateCode are untouched.
+// ─────────────────────────────────────────────────────────────
 
-const textToDiagram = asyncHandler(async (req, res) => {
-  const { description, startX = 100, startY = 100, selectedType } = req.body;
-  if (!description || description.trim().length === 0) {
-    throw new ApiError(400, "Description is required");
+// STEP 1 schema: plain graph — names + connections only, no geometry/styling.
+const planSchema = {
+  type: "object",
+  properties: {
+    diagram_type: {
+      type: "string",
+      enum: ["flowchart", "er_diagram", "architecture", "mindmap"],
+    },
+    nodes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Sequential numeric string: '1', '2', ..." },
+          label: { type: "string", description: "Short name, max 3-4 words" },
+          kind: {
+            type: "string",
+            description:
+              "Semantic role only: start, end, process, decision, entity, service, database, external, central, branch",
+          },
+        },
+        required: ["id", "label", "kind"],
+        additionalProperties: false,
+      },
+    },
+    edges: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          from: { type: "string", description: "Must match a node id" },
+          to: { type: "string", description: "Must match a node id" },
+        },
+        required: ["from", "to"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["diagram_type", "nodes", "edges"],
+  additionalProperties: false,
+};
+
+// STEP 2 schema: ONE flat shape format for every shape type.
+// The server converts these into the canvas format (see toCanvasShape below),
+// so the LLM never has to remember per-type fields (radius, radiusX, points...).
+const layoutSchema = {
+  type: "object",
+  properties: {
+    shapes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Same as the node id" },
+          type: {
+            type: "string",
+            enum: ["rect", "roundedRect", "circle", "ellipse", "diamond"],
+          },
+          x: { type: "number", description: "Left edge of the shape's bounding box" },
+          y: { type: "number", description: "Top edge of the shape's bounding box" },
+          w: { type: "number", description: "Bounding box width" },
+          h: { type: "number", description: "Bounding box height" },
+          text: { type: "string", description: "The node label" },
+          fill: { type: "string", description: "Hex color, e.g. #e0f2fe" },
+          stroke: { type: "string", description: "Hex color, e.g. #0369a1" },
+        },
+        required: ["id", "type", "x", "y", "w", "h", "text", "fill", "stroke"],
+        additionalProperties: false,
+      },
+    },
+    arrows: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "e.g. 'a1'" },
+          from: { type: "string", description: "Must match a shape id" },
+          to: { type: "string", description: "Must match a shape id" },
+        },
+        required: ["id", "from", "to"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["shapes", "arrows"],
+  additionalProperties: false,
+};
+
+// Converts the flat LLM shape into the exact format your canvas / diagramSchema uses.
+// ASSUMPTION: rect/roundedRect x,y = top-left; circle/ellipse/diamond x,y = center
+// (matches your old schema, where diamond points are relative vertices around x,y).
+// If your canvas treats circle/ellipse x,y differently, change only the three
+// "center" lines below.
+const toCanvasShape = (s) => {
+  const base = { id: String(s.id), text: s.text, fill: s.fill, stroke: s.stroke };
+  const w = Math.max(40, s.w);
+  const h = Math.max(40, s.h);
+
+  switch (s.type) {
+    case "circle": {
+      const radius = Math.round(Math.min(w, h) / 2);
+      return { ...base, type: "circle", x: s.x + radius, y: s.y + radius, radius };
+    }
+    case "ellipse":
+      return {
+        ...base,
+        type: "ellipse",
+        x: s.x + w / 2,
+        y: s.y + h / 2,
+        radiusX: Math.round(w / 2),
+        radiusY: Math.round(h / 2),
+      };
+    case "diamond":
+      return {
+        ...base,
+        type: "diamond",
+        x: s.x + w / 2,
+        y: s.y + h / 2,
+        points: [0, -h / 2, w / 2, 0, 0, h / 2, -w / 2, 0],
+      };
+    default: // rect, roundedRect
+      return { ...base, type: s.type, x: s.x, y: s.y, width: w, height: h };
   }
+};
 
-  const prompt = `
-You are an expert at converting natural language descriptions into structured diagrams.
+const buildPlanPrompt = (description, selectedType) => `
+You are an expert at analyzing natural language descriptions and extracting the
+underlying structure of a diagram.
 
 USER DESCRIPTION:
 "${description}"
 
 DIAGRAM TYPE:
 ${getDiagramTypeInstructions(selectedType)}
+
+YOUR TASK:
+Extract ONLY the logical structure — do NOT think about positions, sizes, colors or shapes.
+1. List every distinct element (node) with a short label (max 3-4 words).
+2. Give each node a "kind" describing its semantic role (e.g. start, end, process,
+   decision, entity, service, database, external, central, branch).
+3. List every connection (edge) between nodes using their ids.
+4. Set "diagram_type" to the type this description best fits
+   (if a specific type was requested above, use that one).
+
+RULES:
+- Use sequential numeric string ids: "1", "2", "3"...
+- Every edge must reference existing node ids
+- Decisions should have one outgoing edge per branch
+- Do not invent components that were not mentioned or clearly implied
+- No styling, no coordinates, no sizes
+`;
+
+const buildLayoutPrompt = (plan, diagramType, startX, startY) => `
+You are an expert at turning a logical diagram structure into a visual diagram layout.
+
+DIAGRAM STRUCTURE (already analyzed — do not add, remove or rename elements):
+${JSON.stringify({ nodes: plan.nodes, edges: plan.edges }, null, 2)}
+
+DIAGRAM TYPE:
+${getDiagramTypeInstructions(diagramType)}
 
 CANVAS GUIDELINES:
 Start the first shape at approximately x:${startX}, y:${startY} — this is the next
@@ -451,42 +604,109 @@ STYLING (use color purposefully, not randomly):
   "#f3f4f6" (light gray, for general/neutral steps)
 - stroke: use a darker shade that complements the fill
 
-Your task:
-1. Identify all distinct components, entities, or steps mentioned
-2. Identify the relationships or flow between them
-3. Convert this into shapes and arrows following the DIAGRAM TYPE conventions above
+YOUR TASK:
+1. Create exactly one shape per node, choosing the shape "type" from the node's "kind"
+   and the DIAGRAM TYPE conventions above
+2. Create exactly one arrow per edge
+3. Give EVERY shape x, y, w and h — the bounding box (x,y = top-left corner),
+   no matter which type it is. Never omit w or h.
+4. Make the layout clean, with no overlapping shapes
 
 RULES:
-- Each shape's width should be based on text length (estimate: text length * 7 + 30, minimum 40, maximum 240)
-- Use consistent height of 70 for rect/roundedRect; for diamond/ellipse/circle, use a radius/size of roughly 50-70
+- Reuse the node ids as shape ids, so arrows still match ("from"/"to" must be node ids)
+- Use the node label as the shape "text"
+- Width w: text length * 7 + 30, minimum 60, maximum 240
+- Height h: 70 for rect/roundedRect; 100-140 for diamond; 80-120 for ellipse;
+  for circle use w = h = 100-140
+- Diamonds need extra width for their text (at least text length * 9 + 40)
 - Arrange shapes in a logical flow — left-to-right for processes, top-to-bottom for hierarchies
-- Space shapes at least 180px apart horizontally and 140px apart vertically
-- Use sequential numeric strings as ids: "1", "2", "3"...
-- If the description implies a decision or branching, create multiple arrows from the diamond shape
-- Keep shape labels short and clear — max 3-4 words
-- Do not invent components that were not mentioned or clearly implied
+- Leave at least 80px of empty gap horizontally and 70px vertically between bounding boxes
+- Arrow ids: "a1", "a2", "a3"...
 `;
 
-  const response = await groq.chat.completions.create({
+const textToDiagram = asyncHandler(async (req, res) => {
+  const { description, startX = 100, startY = 100, selectedType } = req.body;
+  if (!description || description.trim().length === 0) {
+    throw new ApiError(400, "Description is required");
+  }
+
+  const planResponse = await groq.chat.completions.create({
     model: AI_MODELS["textToDiagram"],
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "user", content: buildPlanPrompt(description, selectedType) },
+    ],
+    reasoning_effort: "low",
+    max_completion_tokens: 4096,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "diagram_plan",
+        strict: true,
+        schema: planSchema,
+      },
+    },
+  });
+  if (!planResponse) {
+    throw new ApiError(500, "Groq error (analysis step)");
+  }
+
+  const plan = JSON.parse(planResponse.choices[0].message.content);
+  if (!plan.nodes || plan.nodes.length === 0) {
+    throw new ApiError(422, "Could not extract any elements from the description");
+  }
+
+  
+  const nodeIds = new Set(plan.nodes.map((n) => n.id));
+  plan.edges = (plan.edges || []).filter(
+    (e) => nodeIds.has(e.from) && nodeIds.has(e.to),
+  );
+
+  
+  const resolvedType =
+    selectedType && selectedType !== "auto" ? selectedType : plan.diagram_type;
+
+ 
+  const layoutResponse = await groq.chat.completions.create({
+    model: AI_MODELS["textToDiagram"],
+    messages: [
+      {
+        role: "user",
+        content: buildLayoutPrompt(plan, resolvedType, startX, startY),
+      },
+    ],
+    reasoning_effort: "low",
+    max_completion_tokens: 8192,
     response_format: {
       type: "json_schema",
       json_schema: {
         name: "diagram_generation",
         strict: true,
-        schema: diagramSchema,
+        schema: layoutSchema,
       },
     },
   });
-  if (!response) {
-    throw new ApiError(500, "Groq error");
+  if (!layoutResponse) {
+    throw new ApiError(500, "Groq error (layout step)");
   }
-  const result = JSON.parse(response.choices[0].message.content);
+
+  const layout = JSON.parse(layoutResponse.choices[0].message.content);
+
+  
+  const shapes = layout.shapes.map(toCanvasShape);
+
+  
+  const shapeIds = new Set(shapes.map((s) => s.id));
+  const arrows = layout.arrows.filter(
+    (a) => shapeIds.has(a.from) && shapeIds.has(a.to),
+  );
+
   return res
     .status(200)
-    .json(new ApiResponse(200, result, "Diagram generated successfully"));
+    .json(
+      new ApiResponse(200, { shapes, arrows }, "Diagram generated successfully"),
+    );
 });
+
 
 const generateCode = asyncHandler(async (req, res) => {
   const { detailed_analysis, code_type, language } = req.body;

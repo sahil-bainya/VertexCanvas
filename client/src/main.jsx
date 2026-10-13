@@ -11,24 +11,30 @@ import "./index.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
 import { AuthLayout } from "./components";
+import Tracker from "./components/Tracker.jsx";
+import AuthInit from "./components/AuthInit.jsx";
 import {
   AuthPage,
   BoardPage,
   DashboardPage,
   SettingsPage,
   LandingPage,
+  AdminPage,
 } from "./pages";
 import SocketProvider from "./globalSocket/SocketProvider.jsx";
-import AdminPage from "./components/Admin/AdminPage.jsx";
 const savedTheme = localStorage.getItem("theme") || "default";
 document.documentElement.setAttribute("data-theme", savedTheme);
 
 const router = createBrowserRouter([
   // Public
-  { path: "/", element: <LandingPage /> },
-  { path: "/login", element: <AuthPage /> },
-  { path: "/register", element: <AuthPage /> },
-
+  {
+    element: <Tracker />,
+    children: [
+      { path: "/", element: <LandingPage /> },
+      { path: "/login", element: <AuthPage /> },
+      { path: "/register", element: <AuthPage /> },
+    ],
+  },
   // Protected (App layout wrapper)
   {
     element: <App />,
@@ -74,9 +80,11 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <SocketProvider>
-      <Toaster position="top-center" />
-      <RouterProvider router={router} />
-    </SocketProvider>
+    <AuthInit>
+      <SocketProvider>
+        <Toaster position="top-center" />
+        <RouterProvider router={router} />
+      </SocketProvider>
+    </AuthInit>
   </Provider>,
 );
