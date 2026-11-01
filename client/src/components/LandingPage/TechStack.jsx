@@ -17,17 +17,17 @@ export default function TechStack() {
             className="
     inline-flex items-center
     rounded-full
-    border border-base-300
-    bg-base-200/50!
+    border border-neutral-200
+    bg-neutral-50/50!
     px-3! py-1.5!
     font-mono text-sm font-medium
-    text-base-content/80
+    text-zinc-900/80
     shadow-sm
     transition-all duration-200
     hover:-translate-y-0.5
-    hover:border-primary/40
-    hover:bg-primary/5
-    hover:text-primary
+    hover:border-indigo-700/40
+    hover:bg-indigo-700/5
+    hover:text-indigo-700
     hover:shadow-md
   "
           >

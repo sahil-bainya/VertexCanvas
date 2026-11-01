@@ -1,25 +1,20 @@
-import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+
 import {
   TechStack,
   OpenSource,
   HowItWorks,
   Footer,
-  FinalCTA,
-  Features,
+   Features,
   DemoPreview,
-  DotGrid,
   Hero,
   Navbar,
   AIShowcase,
-  ComparisonTable,
+  ComparisonTable,GradientBackground
 } from "../components/LandingPage";
 export default function LandingPage() {
-const { status } = useSelector((state) => state.auth);
-  if (status) return <Navigate to="/dashboard" replace />;
   return (
-    <div className="relative min-h-screen bg-base-100 font-sans text-base-content">
-      <DotGrid className="opacity-40" />
+    <div className="relative min-h-screen bg-white font-sans text-zinc-900">
+      <GradientBackground />
       <div className="relative">
         <Navbar />
         <Hero />
@@ -30,8 +25,7 @@ const { status } = useSelector((state) => state.auth);
         <HowItWorks />
         <TechStack />
         <OpenSource />
-        <FinalCTA />
-        <Footer />
+               <Footer />
       </div>
     </div>
   );

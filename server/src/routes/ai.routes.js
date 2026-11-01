@@ -3,10 +3,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
   architectureAssist,
   messCleanup,
-  textToDiagram,
   generateCode,
 } from "../controllers/ai.controller.js";
-
+import textToDiagram from "../controllers/textToDiagram.controller.js";
 const router = Router();
 
 router.use(verifyJWT);

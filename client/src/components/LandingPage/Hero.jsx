@@ -1,14 +1,14 @@
-import useGithubStars from "./useGithubStars.js";
+
 import {DotGrid,Icon} from "./"
 const GITHUB_REPO = "https://github.com/sahil-bainya/VertexCanvas";
 export default function Hero() {
-  const stars = useGithubStars();
+  
   return (
     <section className="hero relative overflow-hidden px-6! pb-20! pt-20! md:pb-28! md:pt-28!">
       <DotGrid className="opacity-70" />
 
       <svg
-        className="pointer-events-none absolute -left-6 top-24 h-16 w-16 text-accent/20 md:left-10"
+        className="pointer-events-none absolute -left-6 top-24 h-16 w-16 text-teal-400/20 md:left-10"
         viewBox="0 0 60 60"
         fill="none"
         stroke="currentColor"
@@ -24,7 +24,7 @@ export default function Hero() {
         />
       </svg>
       <svg
-        className="pointer-events-none absolute right-8 top-16 h-20 w-20 text-secondary/20"
+        className="pointer-events-none absolute right-8 top-16 h-20 w-20 text-pink-500/20"
         viewBox="0 0 60 60"
         fill="none"
         stroke="currentColor"
@@ -33,7 +33,7 @@ export default function Hero() {
         <circle cx="30" cy="30" r="22" />
       </svg>
       <svg
-        className="pointer-events-none absolute bottom-10 right-1/4 h-10 w-24 text-primary/20"
+        className="pointer-events-none absolute bottom-10 right-1/4 h-10 w-24 text-indigo-700/20"
         viewBox="0 0 100 40"
         fill="none"
         stroke="currentColor"
@@ -43,7 +43,7 @@ export default function Hero() {
       </svg>
 
       <div className="hero-content relative mx-0! max-w-3xl! flex-col items-start p-0! text-left">
-        <h1 className="font-display text-[40px] font-semibold leading-[1.08] tracking-tight text-base-content md:text-[60px]">
+        <h1 className="font-display text-[40px] font-semibold leading-[1.08] tracking-tight text-zinc-900 md:text-[60px]">
           Design smarter.
           <br />
           <span className="relative inline-block">
@@ -56,7 +56,7 @@ export default function Hero() {
             >
               <path
                 d="M2 9c40-7 240-7 316 2"
-                className="stroke-primary"
+                className="stroke-indigo-700"
                 strokeWidth="4"
                 strokeLinecap="round"
                 pathLength="1"
@@ -66,7 +66,7 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="mt-6! max-w-xl text-[17px] leading-relaxed text-base-content/60">
+        <p className="mt-6! max-w-xl text-[17px] leading-relaxed text-zinc-900/60">
           A real-time collaborative whiteboard with AI-powered diagram analysis,
           auto-layout, and code generation — all in one canvas.
         </p>
@@ -75,7 +75,7 @@ export default function Hero() {
           <div className="aura aura-glow">
             <a
               href="/login"
-              className="btn btn-lg border-none bg-linear-to-r from-primary to-secondary px-6! py-3! text-[15px] font-medium text-primary-content"
+              className="btn btn-lg border-none bg-linear-to-r bg-[#6C3CEB] text-white hover:bg-[#5830C7] rounded-2xl shadow-sm px-6! py-3! text-[15px] font-medium"
             >
               Start drawing free
             </a>
@@ -84,11 +84,10 @@ export default function Hero() {
             href={GITHUB_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-outline btn-lg gap-2 px-5! py-3! text-[15px]"
+            className="btn btn-outline btn-lg gap-2 px-5! py-3! text-[15px] bg-white text-[#6C3CEB] border border-[#6C3CEB] rounded-2xl  font-semibold shadow-sm hover:bg-[#F5F0FF] transition-all duration-200 flex items-center "
           >
             <Icon name="github" className="h-4 w-4" />
             View on GitHub
-            <span className="text-base-content/60">★ {stars}</span>
           </a>
         </div>
       </div>

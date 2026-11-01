@@ -6,17 +6,17 @@ import AIShowcase from "./AIShowcase.jsx";
 import ComparisonTable from "./ComparisonTable.jsx";
 import DemoPreview from "./DemoPreview.jsx";
 import Features from "./Features.jsx";
-import FinalCTA from "./FinalCTA.jsx";
 import Footer from "./Footer.jsx";
 import HowItWorks from "./HowItWorks.jsx";
 import OpenSource from "./OpenSource.jsx";
 import TechStack from "./TechStack.jsx";
+import GradientBackground from "./Gradientbackground.jsx";
 export {
   TechStack,
+  GradientBackground,
   OpenSource,
   HowItWorks,
   Footer,
-  FinalCTA,
   Features,
   DemoPreview,
   DotGrid,

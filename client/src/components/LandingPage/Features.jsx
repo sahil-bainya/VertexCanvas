@@ -8,7 +8,7 @@ const FEATURES = [
   {
     icon: "spark",
     title: "AI diagram assistant",
-    body: "Get suggestions, catch errors, and turn messy sketches into clean diagrams.",
+    body: "Analyze diagrams, get suggestions and identify potential problems.",
   },
   {
     icon: "cursor",
@@ -22,13 +22,13 @@ const FEATURES = [
   },
   {
     icon: "note",
-    title: "Context layer",
-    body: "Pin notes, links, and code snippets directly onto any part of the canvas.",
+    title: "Notes & context",
+    body: "Attach notes, links, and code snippets to canvas elements.",
   },
   {
     icon: "download",
-    title: "Export & notes",
-    body: "Ship your work out as PNG or PDF, with the notes panel included.",
+    title: "Export options",
+    body: "Ship your work out as PNG or PDF.",
   },
 ];
 
@@ -36,16 +36,16 @@ export default function Features() {
   return (
     <section id="features" className="relative px-6! py-24! flex justify-center">
       <div className="mx-auto max-w-6xl">
-        <h2 className="font-display max-w-md text-[30px] font-semibold tracking-tight text-base-content">
+        <h2 className="font-display max-w-md text-[30px] font-semibold tracking-tight text-zinc-900">
           Everything the canvas needs
         </h2>
-        <p className="mt-3! max-w-md text-[15px] text-base-content/60">
+        <p className="mt-3! max-w-md text-[15px] text-zinc-900/60">
           Six connected pieces, built to work as one board.
         </p>
 
         <div className="relative mt-14!  grid grid-cols-1 gap-x-15 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           <svg
-            className="pointer-events-none absolute inset-0 hidden text-base-300 lg:block"
+            className="pointer-events-none absolute inset-0 hidden text-neutral-200 lg:block"
             width="100%"
             height="100%"
             preserveAspectRatio="none"
@@ -71,15 +71,15 @@ export default function Features() {
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="card relative z-10 border-2 border-primary/40 bg-base-200 p-6!"
+              className="card relative z-10 border-2 border-indigo-700/40 bg-neutral-50 p-6!"
             >
-              <div className="mb-4! flex h-9 w-9 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+              <div className="mb-4! flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10 text-pink-500">
                 <Icon name={f.icon} className="h-4.5 w-4.5" />
               </div>
-              <h3 className="text-lg font-medium text-base-content">
+              <h3 className="text-lg font-medium text-zinc-900">
                 {f.title}
               </h3>
-              <p className="mt-2! text-sm leading-relaxed text-base-content/60">
+              <p className="mt-2! text-sm leading-relaxed text-zinc-900/60">
                 {f.body}
               </p>
             </div>

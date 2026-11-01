@@ -159,7 +159,8 @@ export default function StageCanvas({
                 y={el.y || 0}
                 rotation={el.rotation || 0}
                 fill={el.fill}
-                stroke={el.stroke}
+                stroke={el.type === "text" ? undefined : el.stroke}
+                strokeEnabled={el.type !== "text"}
                 ref={(node) => (shapeRefs.current[el.id] = node)}
                 onClick={
                   isFreehand

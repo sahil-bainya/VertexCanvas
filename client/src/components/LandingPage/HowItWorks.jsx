@@ -38,7 +38,7 @@ export default function HowItWorks() {
   return (
     <section id="roadmap" className="px-6! py-24! flex justify-center">
       <div className="mx-auto w-full max-w-5xl">
-        <h2 className="font-display text-[28px] font-semibold tracking-tight text-base-content">
+        <h2 className="font-display text-[28px] font-semibold tracking-tight text-zinc-900">
           How it works
         </h2>
 
@@ -60,17 +60,17 @@ export default function HowItWorks() {
                     <Icon className="h-5 w-5" />
                   </span>
                   {!isLast && (
-                    <span className="mt-2! w-0.5 flex-1 rounded-full bg-primary/20" />
+                    <span className="mt-2! w-0.5 flex-1 rounded-full bg-indigo-700/20" />
                   )}
                 </div>
 
                 {/* Content */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="mt-3! font-display text-[32px] font-semibold leading-tight tracking-tight text-base-content">
+                  <h3 className="mt-3! font-display text-[32px] font-semibold leading-tight tracking-tight text-zinc-900">
                     {step.title}
                   </h3>
 
-                  <p className="mt-3! max-w-2xl text-[15px] leading-relaxed text-base-content/70">
+                  <p className="mt-3! max-w-2xl text-[15px] leading-relaxed text-zinc-900/70">
                     {step.body}
                   </p>
 
@@ -78,9 +78,9 @@ export default function HowItWorks() {
                   <div className="relative mt-8!">
                     <div
                       aria-hidden
-                      className="pointer-events-none absolute -inset-x-4 -bottom-8 h-40 bg-primary/15 blur-3xl"
+                      className="pointer-events-none absolute -inset-x-4 -bottom-8 h-40 bg-indigo-700/15 blur-3xl"
                     />
-                    <div className="relative overflow-hidden rounded-xl border border-base-300 bg-base-100 shadow-xl shadow-primary/10">
+                    <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl shadow-indigo-700/10">
                       <img
                         src={step.image}
                         alt={step.title}
