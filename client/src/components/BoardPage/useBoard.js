@@ -346,6 +346,9 @@ export function useBoard() {
 
   useEffect(() => {
     const newColor = getDefaultStrokeColor();
+    const arrowColor = (theme === "dark" || theme === "luxury" || theme === "sunset")
+      ? "#FFFFFF26"
+      : "#0000004D";
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShapes((prev) =>
       prev.map((s) =>
@@ -358,7 +361,7 @@ export function useBoard() {
     );
     setArrows((prev) =>
       prev.map((a) =>
-        a.isDefaultColor ? { ...a, stroke: newColor, fill: newColor } : a,
+        a.isDefaultColor ? { ...a, stroke: arrowColor, fill: arrowColor } : a,
       ),
     );
     setPencilColor(getDefaultStrokeColor());
@@ -441,7 +444,9 @@ export function useBoard() {
 
   const connectShapes = (fromId, toId) => {
     saveHistory();
-    const color = getDefaultStrokeColor();
+    const color = (theme === "dark" || theme === "luxury" || theme === "sunset")
+      ? "#FFFFFF26"
+      : "#0000004D";
     const fromShape = shapes.find((s) => s.id === fromId);
     const toShape = shapes.find((s) => s.id === toId);
     const fromNode = shapeRefs.current[fromId];

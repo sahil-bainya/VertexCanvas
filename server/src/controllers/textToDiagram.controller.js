@@ -968,11 +968,13 @@ const textToDiagram = asyncHandler(async (req, res) => {
       ly += 28;
     });
   }
+const ARROW_COLOR = "#94a3b8";
 
   const arrows = edges.map((e, i) => ({
     id: `a${i + 1}`,
     from: e.from,
     to: e.to,
+    stroke: ARROW_COLOR,
   }));
 
   return res

@@ -135,9 +135,9 @@ export default function StageCanvas({
             stroke={
               selectedArrowId === arrow.id
                 ? "#3b82f6"
-                : arrow.stroke || "#000000"
+                : arrow.stroke || "#94a3b8"
             }
-            fill={arrow.stroke || "#000000"}
+            fill={arrow.stroke || "#94a3b8"}
             strokeWidth={selectedArrowId === arrow.id ? 3 : 2}
             hitStrokeWidth={20}
             onClick={() => {
